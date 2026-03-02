@@ -1,0 +1,5 @@
+.env
+backend/.env
+git rm --cached backend/.envnode_modules
+
+uploads/
