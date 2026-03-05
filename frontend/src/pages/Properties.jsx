@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import PropertyCard from "../components/PropertyCard";
 
 const Properties = () => {
@@ -7,8 +7,8 @@ const Properties = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/listings/published")
+    api
+      .get("/listings/published")
       .then((res) => {
         setListings(res.data);
         setLoading(false);

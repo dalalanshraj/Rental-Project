@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import { amenitiesData } from "../amenitiesData.js";
 import { useModal } from "../context/ModalContext";
 
@@ -18,8 +18,8 @@ export default function AmenitiesTab({ listingId, initialData = {}, goNextTab })
   useEffect(() => {
     if (!listingId || Object.keys(amenities).length > 0) return;
 
-    axios
-      .get(`http://localhost:8000/api/listings/${listingId}`)
+    api
+      .get(`/listings/${listingId}`)
       .then((res) => setAmenities(res.data.amenities || {}));
   }, [listingId]);
 
@@ -51,8 +51,8 @@ export default function AmenitiesTab({ listingId, initialData = {}, goNextTab })
   /* ================= SAVE ================= */
  const saveAmenities = async () => {
   try {
-    await axios.put(
-      `http://localhost:8000/api/listings/${listingId}/amenities`,
+    await api.put(
+      `/listings/${listingId}/amenities`,
       amenities
     );
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import axios from "axios";
+import api from "../api/axios.js";
 
 // ==============================
 // DATE HELPERS (VERY IMPORTANT)
@@ -27,8 +27,8 @@ export default function CalendarTab({ listingId }) {
   useEffect(() => {
     if (!listingId) return;
 
-    axios
-      .get(`http://localhost:8000/api/listings/${listingId}/calendar`)
+    api
+      .get(`/listings/${listingId}/calendar`)
       .then((res) => setCalendar(res.data))
       .catch(console.error);
   }, [listingId]);
@@ -73,8 +73,8 @@ export default function CalendarTab({ listingId }) {
     setLoading(true);
 
     try {
-      await axios.post(
-        `http://localhost:8000/api/listings/${listingId}/calendar/block`,
+      await api.post(
+        `/listings/${listingId}/calendar/block`,
         {
           startDate: formatLocalDate(startDate),
           endDate: formatLocalDate(endDate),
@@ -88,8 +88,8 @@ export default function CalendarTab({ listingId }) {
         }
       );
 
-      const res = await axios.get(
-        `http://localhost:8000/api/listings/${listingId}/calendar`
+      const res = await api.get(
+        `/listings/${listingId}/calendar`
       );
       setCalendar(res.data);
 
@@ -114,8 +114,8 @@ export default function CalendarTab({ listingId }) {
     setLoading(true);
 
     try {
-      await axios.post(
-        `http://localhost:8000/api/listings/${listingId}/calendar/unblock`,
+      await api.post(
+        `/listings/${listingId}/calendar/unblock`,
         {
           startDate: formatLocalDate(startDate),
           endDate: formatLocalDate(endDate),
@@ -128,8 +128,8 @@ export default function CalendarTab({ listingId }) {
         }
       );
 
-      const res = await axios.get(
-        `http://localhost:8000/api/listings/${listingId}/calendar`
+      const res = await api.get(
+        `/listings/${listingId}/calendar`
       );
       setCalendar(res.data);
 

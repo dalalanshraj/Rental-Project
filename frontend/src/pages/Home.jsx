@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+// import api from "axios";
 import FeaturedActivities from "../components/homeSection/FeaturedActivities";
 import DiscoverDestinSection from "../components/homeSection/DiscoverDestin";
 import PropertiesSection from "../components/homeSection/PropertiesSection";

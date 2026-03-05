@@ -1,6 +1,6 @@
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import {  useModal }  from "../context/ModalContext";
 
 const containerStyle = {
@@ -27,8 +27,8 @@ export default function LocationTab({ listingId, goNextTab }) {
   useEffect(() => {
     if (!listingId) return;
 
-    axios
-      .get(`http://localhost:8000/api/listings/${listingId}`)
+    api
+      .get(`/listings/${listingId}`)
       .then((res) => {
         if (res.data?.location?.lat && res.data?.location?.lng) {
           setPosition({
@@ -46,8 +46,8 @@ export default function LocationTab({ listingId, goNextTab }) {
   const saveLocation = async (lat, lng) => {
     setPosition({ lat, lng });
 
-    await axios.put(
-      `http://localhost:8000/api/listings/${listingId}/location`,
+    await api.put(
+      `/listings/${listingId}/location`,
       {
         lat,
         lng,

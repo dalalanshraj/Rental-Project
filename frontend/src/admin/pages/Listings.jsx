@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api/axios.js";
 import ListingCard from "../components/ListingDetails";
 // import ListingCard from "./ListingCard";
 
@@ -16,7 +16,7 @@ export default function Listings() {
 
   const fetchListings = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/listings", {
+      const res = await api.get("/listings", {
         withCredentials: true,
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -35,8 +35,8 @@ export default function Listings() {
   // ==========================
   const toggleStatus = async (id) => {
     try {
-      const res = await axios.put(
-        `http://localhost:8000/api/listings/${id}/toggle-status`,
+      const res = await api.put(
+        `/listings/${id}/toggle-status`,
         {},
         {
           withCredentials: true,
@@ -65,8 +65,8 @@ export default function Listings() {
     if (!window.confirm("Delete this listing?")) return;
 
     try {
-      await axios.delete(
-        `http://localhost:8000/api/listings/${id}`,
+      await api.delete(
+        `/listings/${id}`,
         {
           withCredentials: true,
           headers: {

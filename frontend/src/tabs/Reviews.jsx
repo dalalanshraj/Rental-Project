@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import { FaCheck, FaTrash, FaEye, FaReply } from "react-icons/fa";
 
 export default function ReviewsTab({ listingId }) {
@@ -9,8 +9,8 @@ export default function ReviewsTab({ listingId }) {
   const [replyText, setReplyText] = useState("");
 
   const fetchReviews = async () => {
-    const res = await axios.get(
-      `http://localhost:8000/api/listings/${listingId}`
+    const res = await api.get(
+      `/listings/${listingId}`
     );
     setReviews(res.data.reviews || []);
   };
@@ -20,23 +20,23 @@ export default function ReviewsTab({ listingId }) {
   }, [listingId]);
 
   const publishReview = async (id) => {
-    await axios.put(
-      `http://localhost:8000/api/listings/${listingId}/reviews/${id}/publish`
+    await api.put(
+      `/listings/${listingId}/reviews/${id}/publish`
     );
     fetchReviews();
   };
 
   const deleteReview = async (id) => {
     if (!confirm("Delete review?")) return;
-    await axios.delete(
-      `http://localhost:8000/api/listings/${listingId}/reviews/${id}`
+    await api.delete(
+      `/listings/${listingId}/reviews/${id}`
     );
     fetchReviews();
   };
 
   const saveReply = async () => {
-    await axios.put(
-      `http://localhost:8000/api/listings/${listingId}/reviews/${replyReview._id}/reply`,
+    await api.put(
+      `/listings/${listingId}/reviews/${replyReview._id}/reply`,
       { reply: replyText }
     );
     setReplyReview(null);

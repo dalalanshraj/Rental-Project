@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api/axios.js";
 import { useState } from "react";
 
 export default function InquiryModal({ propertyId, onClose }) {
@@ -25,7 +25,7 @@ export default function InquiryModal({ propertyId, onClose }) {
   setSuccess("");
 
   try {
-    const res = await axios.post("http://localhost:8000/api/inquiries", {
+    const res = await api.post("/inquiries", {
       ...form,
       propertyId,
     });

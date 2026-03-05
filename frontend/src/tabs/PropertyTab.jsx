@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import { useModal } from "../context/ModalContext";
 
 export default function PropertyTab({
@@ -54,8 +54,8 @@ export default function PropertyTab({
 
     try {
       if (!listingId) {
-        const res = await axios.post(
-          "http://localhost:8000/api/listings",
+        const res = await api.post(
+          "/listings",
           form
         );
         setListingId(res.data._id);
@@ -63,8 +63,8 @@ export default function PropertyTab({
         return;
       }
 
-      await axios.put(
-        `http://localhost:8000/api/listings/${listingId}/property`,
+      await api.put(
+        `/listings/${listingId}/property`,
         form
       );
 

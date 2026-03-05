@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios.js";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -34,8 +34,8 @@ const PropertyDetail = () => {
 
   // ================= FETCH LISTING =================
   useEffect(() => {
-    axios
-      .get(`http://localhost:8000/api/listings/${id}`)
+    api
+      .get(`/listings/${id}`)
       .then((res) => {
         setListing(res.data);
         setLoading(false);
@@ -45,8 +45,8 @@ const PropertyDetail = () => {
 
   // ================= FETCH CALENDAR =================
   useEffect(() => {
-    axios
-      .get(`http://localhost:8000/api/listings/${id}/calendar`)
+    api
+      .get(`/listings/${id}/calendar`)
       .then((res) => {
         // ❌ only full booked block
         const blocked = res.data
@@ -64,7 +64,7 @@ const PropertyDetail = () => {
 
   // ================= IMAGES =================
   const imageUrls =
-    listing.photos?.map((img) => `http://localhost:8000/${img}`) || [];
+    listing.photos?.map((img) => `${import.meta.env.VITE_API_URL}${img}`) || [];
 
   // ================= REVIEWS =================
   const publishedReviews =

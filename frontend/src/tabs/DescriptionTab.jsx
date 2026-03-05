@@ -1,6 +1,6 @@
 import { Editor } from "@tinymce/tinymce-react";
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import { useModal } from "../context/ModalContext";
 
 export default function DescriptionTab({
@@ -36,8 +36,8 @@ export default function DescriptionTab({
         return;
       }
 
-      await axios.put(
-        `http://localhost:8000/api/listings/${listingId}/description`,
+      await api.put(
+        `/listings/${listingId}/description`,
         { description: content }
       );
 

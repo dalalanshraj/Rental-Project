@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import dayjs from "dayjs";
 
 export default function ProCalendar({ listingId }) {
@@ -7,8 +7,8 @@ export default function ProCalendar({ listingId }) {
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:8000/api/listings/${listingId}/calendar`)
+    api
+      .get(`/listings/${listingId}/calendar`)
       .then((res) => setCalendar(res.data || []))
       .catch(() => {});
   }, [listingId]);

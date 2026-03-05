@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import { activitiesData } from "../activitiesData.js";
 import { useModal } from "../context/ModalContext";
 
@@ -18,8 +18,8 @@ export default function ActivitiesTab({ listingId, goNextTab, initialData = {} }
   useEffect(() => {
     if (!listingId) return;
 
-    axios
-      .get(`http://localhost:8000/api/listings/${listingId}`)
+    api
+      .get(`/listings/${listingId}`)
       .then((res) => {
         setActivities(res.data.activities || {});
       })
@@ -55,8 +55,8 @@ export default function ActivitiesTab({ listingId, goNextTab, initialData = {} }
 
   /* ================= SAVE ================= */
   const saveActivities = async () => {
-    await axios.put(
-      `http://localhost:8000/api/listings/${listingId}/activities`,
+    await api.put(
+      `/listings/${listingId}/activities`,
       activities
     );
     alert("Activities saved");

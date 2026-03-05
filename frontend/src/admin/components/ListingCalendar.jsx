@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import axios from "axios";
+import api from "../../api/axios.js";
 
 // normalize date (timezone bug fix)
 const normalize = (d) =>
@@ -22,8 +22,8 @@ export default function ListingCalendar({
   useEffect(() => {
     if (!listingId) return;
 
-    axios
-      .get(`http://localhost:8000/api/listings/${listingId}/calendar`)
+    api
+      .get(`/listings/${listingId}/calendar`)
       .then((res) => {
         const blocked = res.data
           .filter((d) => d.status === "R" || d.status === "H")

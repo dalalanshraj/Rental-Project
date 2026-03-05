@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import { useModal } from "../context/ModalContext";
 
 /* ===============================
@@ -40,8 +40,8 @@ export default function RatesTab({ listingId, goNextTab }) {
   useEffect(() => {
     if (!listingId) return;
 
-    axios
-      .get(`http://localhost:8000/api/listings/${listingId}`)
+    api
+      .get(`/listings/${listingId}`)
       .then(res => {
         setRates(res.data?.rates || []);
         setExtraFees(res.data?.extraFees || []);
@@ -59,8 +59,8 @@ export default function RatesTab({ listingId, goNextTab }) {
     }
 
     try {
-      const res = await axios.put(
-        `http://localhost:8000/api/listings/${listingId}/rates`,
+      const res = await api.put(
+        `/listings/${listingId}/rates`,
         { rate: form }
       );
 
@@ -77,8 +77,8 @@ export default function RatesTab({ listingId, goNextTab }) {
   ================================ */
   const deleteRate = async (index) => {
     try {
-      const res = await axios.put(
-        `http://localhost:8000/api/listings/${listingId}/rates/delete`,
+      const res = await api.put(
+        `/listings/${listingId}/rates/delete`,
         { index }
       );
       setRates(res.data.rates);
@@ -102,8 +102,8 @@ export default function RatesTab({ listingId, goNextTab }) {
           ? { index: editFeeIndex, fee: feeForm }
           : feeForm;
 
-      const res = await axios.put(
-        `http://localhost:8000/api/listings/${listingId}${url}`,
+      const res = await api.put(
+        `/listings/${listingId}${url}`,
         payload
       );
 
@@ -120,8 +120,8 @@ export default function RatesTab({ listingId, goNextTab }) {
      DELETE EXTRA FEE
   ================================ */
   const deleteExtraFee = async (index) => {
-    const res = await axios.put(
-      `http://localhost:8000/api/listings/${listingId}/extra-fees/delete`,
+    const res = await api.put(
+      `/listings/${listingId}/extra-fees/delete`,
       { index }
     );
     setExtraFees(res.data);

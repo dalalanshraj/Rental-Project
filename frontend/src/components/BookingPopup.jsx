@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api/axios.js";
 import { useEffect, useState } from "react";
 
 const BookingPopup = ({ property, checkIn, checkOut, close }) => {
@@ -40,7 +40,7 @@ const BookingPopup = ({ property, checkIn, checkOut, close }) => {
       guests: 1
     };
 
-    const res = await axios.post("http://localhost:8000/api/bookings/create", payload);
+    const res = await api.post("/bookings/create", payload);
 
     alert("Booking Created!");
   };

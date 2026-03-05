@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+
 export default function   ListingCard({
   listing,
   onToggleStatus,
@@ -9,10 +10,10 @@ export default function   ListingCard({
   if (!listing) return null;
 
   const image =
-    listing?.photos && listing.photos.length > 0
-      ? `http://localhost:8000/${listing.photos[0]}`
-      : "https://via.placeholder.com/400x300?text=No+Image";
-
+  listing?.photos && listing.photos.length > 0
+    ? `${import.meta.env.VITE_API_URL}${listing.photos[0]}`
+    : "https://via.placeholder.com/400x300?text=No+Image";
+    
   const price =
     listing?.rates && listing.rates.length > 0
       ? `₹${listing.rates[0].nightly}/night`

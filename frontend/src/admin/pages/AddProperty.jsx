@@ -2,7 +2,7 @@ import { useState } from "react";
 import api from "../../api/axios";
 import Sidebar from "../components/Sidebar";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axios.js";
 
 const AddProperty = () => {
   const navigate = useNavigate();

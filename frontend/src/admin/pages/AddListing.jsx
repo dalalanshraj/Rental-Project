@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axios.js";
 
 import PropertyTab from "../../tabs/PropertyTab";
 import DescriptionTab from "../../tabs/DescriptionTab";
@@ -54,8 +54,8 @@ export default function AddListing() {
   useEffect(() => {
     if (!listingId) return;
 
-    axios
-      .get(`http://localhost:8000/api/listings/${listingId}`)
+    api
+      .get(`/listings/${listingId}`)
       .then(res => {
         setListingData(res.data);
       });

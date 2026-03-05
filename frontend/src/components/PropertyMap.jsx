@@ -97,7 +97,7 @@ const PropertyMap = ({ properties, selectedProperty }) => {
             <img
               src={
                 selected.photos?.[0]
-                  ? `http://localhost:8000/${selected.photos[0]}`
+                  ? `/${selected.photos[0]}`
                   : "https://via.placeholder.com/200x120"
               }
               alt={selected.property?.title}

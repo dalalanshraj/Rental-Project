@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api/axios.js";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -29,8 +29,8 @@ export default function BookingPreviewModal({
     setLoading(true);
     setError("");
 
-    axios
-      .post("http://localhost:8000/api/bookings/preview", {
+    api
+      .post("/bookings/preview", {
         propertyId,
         checkIn: formatDate(checkIn),
         checkOut: formatDate(checkOut),

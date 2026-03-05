@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 
 const statusColors = {
   A: "",            // empty (available)
@@ -28,7 +28,7 @@ const PropertyCalendar = () => {
     try {
       // console.log("Sending request with:", { year, month });
 
-      const res = await axios.get("http://localhost:8000/api/calendar/month", {
+      const res = await api.get("/calendar/month", {
         params: { year, month },
       });
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api/axios.js";
 
 const roleColor = {
   admin: "bg-purple-100 text-purple-700",
@@ -10,8 +10,8 @@ const Users = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/admin/users", {
+    api
+      .get("admin/users", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

@@ -251,7 +251,7 @@ export const updatePhotos = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const newPhotos = req.files?.map(file => file.path) || [];
+    const newPhotos = req.files?.map(file => `/uploads/${file.filename}`) || [];
 
     if (!newPhotos.length) {
       return res.status(400).json({ error: "No photos uploaded" });

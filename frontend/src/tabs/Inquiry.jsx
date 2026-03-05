@@ -1,13 +1,13 @@
   import { useEffect, useState } from "react";
-  import axios from "axios";
+ import api from "../api/axios.js";
 
   export default function Inquiry() {
     const [inquiries, setInquiries] = useState([]);
     const [selected, setSelected] = useState(null);
 
     useEffect(() => {
-      axios
-        .get("http://localhost:8000/api/inquiries")
+      api
+        .get("/inquiries")
         .then(res => setInquiries(res.data));
     }, []);
 

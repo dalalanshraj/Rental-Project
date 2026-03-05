@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 
 export default function VideoTab({ listingId, goNextTab }) {
   const [form, setForm] = useState({
@@ -13,8 +13,8 @@ export default function VideoTab({ listingId, goNextTab }) {
   useEffect(() => {
     if (!listingId) return;
 
-    axios
-      .get(`http://localhost:8000/api/listings/${listingId}`)
+    api
+      .get(`/listings/${listingId}`)
       .then((res) => {
         if (res.data?.video) {
           setForm({
@@ -56,8 +56,8 @@ export default function VideoTab({ listingId, goNextTab }) {
     try {
       setLoading(true);
 
-      await axios.put(
-        `http://localhost:8000/api/listings/${listingId}/video`,
+      await api.put(
+        `/listings/${listingId}/video`,
         form
       );
 

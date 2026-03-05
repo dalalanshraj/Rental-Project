@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 
 export default function ReviewModal({ listingId, onClose }) {
   const [form, setForm] = useState({
@@ -13,8 +13,8 @@ export default function ReviewModal({ listingId, onClose }) {
 
   const submitReview = async () => {
     try {
-      await axios.post(
-        `http://localhost:8000/api/listings/${listingId}/reviews`,
+      await api.post(
+        `/listings/${listingId}/reviews`,
         form
       );
 
