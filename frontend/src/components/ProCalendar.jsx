@@ -9,7 +9,7 @@ export default function ProCalendar({ listingId }) {
   useEffect(() => {
     api
       .get(`/listings/${listingId}/calendar`)
-      .then((res) => setCalendar(res.data || []))
+      .then((res) => setCalendar(res.data.data || []))
       .catch(() => {});
   }, [listingId]);
 

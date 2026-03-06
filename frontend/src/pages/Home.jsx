@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 // import api from "axios";
 import FeaturedActivities from "../components/homeSection/FeaturedActivities";
 import DiscoverDestinSection from "../components/homeSection/DiscoverDestin";
-import PropertiesSection from "../components/homeSection/PropertiesSection";
+// import PropertiesSection from "../components/homeSection/PropertiesSection";
 import PropertyCalendar from "../components/PropertyCalendar";
 import PropertyCard from "../components/PropertyCard";
 import DatePicker from "react-datepicker";
@@ -136,7 +136,7 @@ const HeroSection = () => {
         </div>
       </section>
 
-      <PropertiesSection />
+      {/* <PropertiesSection /> */}
       <FeaturedActivities />
       <DiscoverDestinSection />
       <PropertyCalendar />
