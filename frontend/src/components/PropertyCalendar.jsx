@@ -25,42 +25,39 @@ const PropertyCalendar = () => {
   }, [month, year]);
 
   const fetchCalendarData = async () => {
-    try {
-      // console.log("Sending request with:", { year, month });
+  try {
 
-      const res = await api.get("/calendar/month", {
-  params: { year, month },
-});
+    const res = await api.get("/calendar/month", {
+      params: { year, month },
+    });
 
-const apiData = res?.data?.data;
+    const apiData = Array.isArray(res?.data?.data)
+      ? res.data.data
+      : [];
 
-if (!Array.isArray(apiData)) {
-  console.error("Calendar API returned invalid data:", res.data);
-  setCalendarData([]);
-  return;
-}
+    const mapped = apiData.map((item) => ({
+      id: item.id,
+      name: item.name,
+      days: Array.isArray(item.days)
+        ? item.days.map((d) => ({
+            date: d.date,
+            status:
+              d.status === "available" || d.status === "A"
+                ? "A"
+                : d.status === "reserved" || d.status === "R"
+                ? "R"
+                : "H",
+          }))
+        : [],
+    }));
 
-const mapped = apiData.map((item) => ({
-  id: item.id,
-  name: item.name,
-  days: Array.isArray(item.days)
-    ? item.days.map((d) => ({
-        date: d.date,
-        status:
-          d.status === "available" || d.status === "A"
-            ? "A"
-            : d.status === "reserved" || d.status === "R"
-            ? "R"
-            : "H",
-      }))
-    : [],
-}));
+    setCalendarData(mapped);
 
-setCalendarData(mapped);
-    } catch (err) {
-      console.error("Error fetching calendar:", err);
-    }
-  };
+  } catch (err) {
+    console.error("Error fetching calendar:", err);
+    setCalendarData([]);
+  }
+};
 
   const nextMonth = () => {
     if (month === 12) {
@@ -163,7 +160,7 @@ setCalendarData(mapped);
             </thead>
 
             <tbody>
-              {calendarData.map((property) => (
+              {(Array.isArray(calendarData) ? calendarData : []).map((property) => (
                 <tr key={property.id} className="text-center text-sm">
                   <td className="border p-2 font-semibold text-sky-700">
                     {property.id}
