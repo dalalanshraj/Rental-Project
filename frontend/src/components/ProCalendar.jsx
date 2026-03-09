@@ -13,9 +13,12 @@ export default function ProCalendar({ listingId }) {
   api
     .get(`/listings/${listingId}/calendar`)
     .then((res) => {
-      const apiData = Array.isArray(res?.data)
-        ? res.data
-        : res?.data?.data || [];
+     const apiData =
+  Array.isArray(res?.data)
+    ? res.data
+    : Array.isArray(res?.data?.data)
+    ? res.data.data
+    : [];
 
       setCalendar(apiData);
     })

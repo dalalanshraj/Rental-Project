@@ -25,9 +25,12 @@ export default function ListingCalendar({
     api
       .get(`/listings/${listingId}/calendar`)
       .then((res) => {
-        const apiData = Array.isArray(res?.data?.data)
-  ? res.data.data
-  : [];
+  const apiData =
+    Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res?.data?.data)
+      ? res.data.data
+      : [];
 
 const blocked = apiData
   .filter((d) => d.status === "R" || d.status === "H")
