@@ -35,7 +35,11 @@ const PropertyCalendar = () => {
       // console.log("API Response:", res.data.data);
 
       // Convert backend data if needed
-      const mapped = res.data.data.map((item) => ({
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || [];
+
+      const mapped = data.map((item) => ({
         id: item.id,
         name: item.name,
         days: item.days?.map((d) => ({

@@ -6,10 +6,17 @@ export default function ProCalendar({ listingId }) {
   const [calendar, setCalendar] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
+  
   useEffect(() => {
     api
       .get(`/listings/${listingId}/calendar`)
-      .then((res) => setCalendar(res.data.data || []))
+      .then((res) => {
+  const data = Array.isArray(res.data)
+    ? res.data
+    : res.data?.data || [];
+
+  setCalendar(data);
+})
       .catch(() => {});
   }, [listingId]);
 
