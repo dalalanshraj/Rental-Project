@@ -39,24 +39,24 @@ if (!Array.isArray(apiData)) {
   setCalendarData([]);
   return;
 }
+
 const mapped = apiData.map((item) => ({
   id: item.id,
   name: item.name,
-  days: item.days?.map((d) => ({
-    date: d.date,
-    status:
-      d.status === "available" || d.status === "A"
-        ? "A"
-        : d.status === "reserved" || d.status === "R"
-        ? "R"
-        : "H",
-  })),
+  days: Array.isArray(item.days)
+    ? item.days.map((d) => ({
+        date: d.date,
+        status:
+          d.status === "available" || d.status === "A"
+            ? "A"
+            : d.status === "reserved" || d.status === "R"
+            ? "R"
+            : "H",
+      }))
+    : [],
 }));
 
 setCalendarData(mapped);
-
-      // console.log("Mapped Calendar:", mapped);
-      setCalendarData(mapped);
     } catch (err) {
       console.error("Error fetching calendar:", err);
     }
