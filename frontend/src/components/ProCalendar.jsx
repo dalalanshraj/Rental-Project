@@ -6,18 +6,12 @@ export default function ProCalendar({ listingId }) {
   const [calendar, setCalendar] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
- useEffect(() => {
-  api
-    .get(`/listings/${listingId}/calendar`)
-    .then((res) => {
-      const data = Array.isArray(res.data) ? res.data : [];
-      setCalendar(data);
-    })
-    .catch((err) => {
-      console.log("Calendar API error:", err);
-      setCalendar([]);
-    });
-}, [listingId]);
+  useEffect(() => {
+    api
+      .get(`/listings/${listingId}/calendar`)
+      .then((res) => setCalendar(res.data.data || []))
+      .catch(() => {});
+  }, [listingId]);
 
   const start = currentMonth.startOf("month");
   const end = currentMonth.endOf("month");
@@ -30,14 +24,13 @@ export default function ProCalendar({ listingId }) {
   }
 
   // find if booked
- const isBooked = (date) =>
-  Array.isArray(calendar) &&
-  calendar.find(
-    (c) =>
-      dayjs(c.date).format("YYYY-MM-DD") ===
-        dayjs(date).format("YYYY-MM-DD") &&
-      c.status === "R"
-  );
+  const isBooked = (date) =>
+    calendar.find(
+      (c) =>
+        dayjs(c.date).format("YYYY-MM-DD") ===
+          dayjs(date).format("YYYY-MM-DD") &&
+        c.status === "R"
+    );
 
   // 🔥 TURNOVER LOGIC
   const isTurnover = (date) => {

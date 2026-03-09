@@ -25,9 +25,9 @@ export default function ListingCalendar({
     api
       .get(`/listings/${listingId}/calendar`)
       .then((res) => {
-        const blocked = res.data
-          .filter((d) => d.status === "R" || d.status === "H")
-          .map((d) => normalize(new Date(d.date)));
+        const blocked = (res.data.data || [])
+  .filter((d) => d.status === "R" || d.status === "H")
+  .map((d) => normalize(new Date(d.date)));
 
         setBlockedDates(blocked);
       })
