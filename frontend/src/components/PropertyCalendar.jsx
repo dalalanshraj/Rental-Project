@@ -29,29 +29,31 @@ const PropertyCalendar = () => {
       // console.log("Sending request with:", { year, month });
 
       const res = await api.get("/calendar/month", {
-        params: { year, month },
-      });
+  params: { year, month },
+});
 
-      // console.log("API Response:", res.data.data);
+const apiData = res?.data?.data;
 
-      // Convert backend data if needed
-      const data = Array.isArray(res.data)
-        ? res.data
-        : res.data?.data || [];
+if (!Array.isArray(apiData)) {
+  console.error("Calendar API returned invalid data:", res.data);
+  setCalendarData([]);
+  return;
+}
+const mapped = apiData.map((item) => ({
+  id: item.id,
+  name: item.name,
+  days: item.days?.map((d) => ({
+    date: d.date,
+    status:
+      d.status === "available" || d.status === "A"
+        ? "A"
+        : d.status === "reserved" || d.status === "R"
+        ? "R"
+        : "H",
+  })),
+}));
 
-      const mapped = data.map((item) => ({
-        id: item.id,
-        name: item.name,
-        days: item.days?.map((d) => ({
-          date: d.date,
-          status:
-            d.status === "available" || d.status === "A"
-              ? "A"
-              : d.status === "reserved" || d.status === "R"
-                ? "R"
-                : "H",
-        })),
-      }));
+setCalendarData(mapped);
 
       // console.log("Mapped Calendar:", mapped);
       setCalendarData(mapped);

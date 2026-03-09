@@ -11,11 +11,11 @@ export default function ProCalendar({ listingId }) {
     api
       .get(`/listings/${listingId}/calendar`)
       .then((res) => {
-  const data = Array.isArray(res.data)
+  const apiData = Array.isArray(res.data)
     ? res.data
     : res.data?.data || [];
 
-  setCalendar(data);
+  setCalendar(apiData);
 })
       .catch(() => {});
   }, [listingId]);

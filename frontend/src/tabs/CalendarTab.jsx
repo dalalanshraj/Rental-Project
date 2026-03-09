@@ -24,12 +24,19 @@ export default function CalendarTab({ listingId }) {
   // ==============================
   // LOAD CALENDAR
   // ==============================setCalendar(res.data);
-  useEffect(() => {ListingCalendar.jsx
+  useEffect(() => {
+    ListingCalendar.jsx
     if (!listingId) return;
 
     api
       .get(`/listings/${listingId}/calendar`)
-      .then((res) => setCalendar(res.data.data || []))
+      .then((res) => {
+        const apiData = Array.isArray(res?.data?.data)
+          ? res.data.data
+          : [];
+
+        setCalendar(apiData);
+      })
       .catch(console.error);
   }, [listingId]);
 
