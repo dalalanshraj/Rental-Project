@@ -25,39 +25,39 @@ const PropertyCalendar = () => {
   }, [month, year]);
 
   const fetchCalendarData = async () => {
-  try {
+    try {
 
-    const res = await api.get("/calendar/month", {
-      params: { year, month },
-    });
+      const res = await api.get("/calendar/month", {
+        params: { year, month },
+      });
 
-    const apiData = Array.isArray(res?.data?.data)
-      ? res.data.data
-      : [];
+      const apiData = Array.isArray(res?.data?.data)
+        ? res.data.data
+        : [];
 
-    const mapped = apiData.map((item) => ({
-      id: item.id,
-      name: item.name,
-      days: Array.isArray(item.days)
-        ? item.days.map((d) => ({
-            date: d.date,
+      const mapped = apiData.map((item) => ({
+        id: item.id,
+        name: item.name,
+        days: Array.isArray(item?.days)
+          ? item.days.map((d) => ({
+            date: d?.date,
             status:
-              d.status === "available" || d.status === "A"
+              d?.status === "available" || d?.status === "A"
                 ? "A"
-                : d.status === "reserved" || d.status === "R"
-                ? "R"
-                : "H",
+                : d?.status === "reserved" || d?.status === "R"
+                  ? "R"
+                  : "H",
           }))
-        : [],
-    }));
+          : [],
+      }));
 
-    setCalendarData(mapped);
+      setCalendarData(mapped);
 
-  } catch (err) {
-    console.error("Error fetching calendar:", err);
-    setCalendarData([]);
-  }
-};
+    } catch (err) {
+      console.error("Error fetching calendar:", err);
+      setCalendarData([]);
+    }
+  };
 
   const nextMonth = () => {
     if (month === 12) {
@@ -171,7 +171,9 @@ const PropertyCalendar = () => {
                     const dayNumber = index + 1;
 
                     const foundDay = property.days?.find((d) => {
-                      const dayFromApi = parseInt(d.date.split("-")[2]);
+                      const dayFromApi = d?.date
+                        ? parseInt(d.date.split("-")[2])
+                        : null;
                       return dayFromApi === dayNumber;
                     });
 
