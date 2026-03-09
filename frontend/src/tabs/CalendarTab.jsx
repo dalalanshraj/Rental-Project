@@ -34,7 +34,6 @@ export default function CalendarTab({ listingId }) {
         const apiData = Array.isArray(res?.data?.data)
           ? res.data.data
           : [];
-
         setCalendar(apiData);
       })
       .catch(console.error);
