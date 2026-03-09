@@ -23,19 +23,13 @@ export default function CalendarTab({ listingId }) {
 
   // ==============================
   // LOAD CALENDAR
-  // ==============================setCalendar(res.data);
+  // ==============================
   useEffect(() => {
-   
     if (!listingId) return;
 
     api
       .get(`/listings/${listingId}/calendar`)
-      .then((res) => {
-        const apiData = Array.isArray(res?.data?.data)
-          ? res.data.data
-          : [];
-        setCalendar(apiData);
-      })
+      .then((res) => setCalendar(res.data))
       .catch(console.error);
   }, [listingId]);
 
@@ -97,7 +91,7 @@ export default function CalendarTab({ listingId }) {
       const res = await api.get(
         `/listings/${listingId}/calendar`
       );
-      setCalendar(res.data.data || []);
+      setCalendar(res.data);
 
       setStartDate(null);
       setEndDate(null);
@@ -137,7 +131,7 @@ export default function CalendarTab({ listingId }) {
       const res = await api.get(
         `/listings/${listingId}/calendar`
       );
-      setCalendar(res.data.data || []);
+      setCalendar(res.data);
 
       setStartDate(null);
       setEndDate(null);

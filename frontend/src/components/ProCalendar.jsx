@@ -6,28 +6,12 @@ export default function ProCalendar({ listingId }) {
   const [calendar, setCalendar] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
-  
- useEffect(() => {
-  if (!listingId) return;
-
-  api
-    .get(`/listings/${listingId}/calendar`)
-    .then((res) => {
-
-      const apiData =
-        Array.isArray(res?.data?.data)
-          ? res.data.data
-          : [];
-
-      setCalendar(apiData);
-
-    })
-    .catch((err) => {
-      console.error("Calendar API error:", err);
-      setCalendar([]);
-    });
-
-}, [listingId]);
+  useEffect(() => {
+    api
+      .get(`/listings/${listingId}/calendar`)
+      .then((res) => setCalendar(res.data || []))
+      .catch(() => {});
+  }, [listingId]);
 
   const start = currentMonth.startOf("month");
   const end = currentMonth.endOf("month");
@@ -40,17 +24,14 @@ export default function ProCalendar({ listingId }) {
   }
 
   // find if booked
-const isBooked = (date) => {
-  if (!Array.isArray(calendar)) return false;
+  const isBooked = (date) =>
+    calendar.find(
+      (c) =>
+        dayjs(c.date).format("YYYY-MM-DD") ===
+          dayjs(date).format("YYYY-MM-DD") &&
+        c.status === "R"
+    );
 
-  return calendar.find(
-    (c) =>
-      c?.date &&
-      dayjs(c.date).format("YYYY-MM-DD") ===
-        dayjs(date).format("YYYY-MM-DD") &&
-      c?.status === "R"
-  );
-};
   // 🔥 TURNOVER LOGIC
   const isTurnover = (date) => {
     const prevBooked = isBooked(dayjs(date).subtract(1, "day"));
@@ -96,7 +77,7 @@ const isBooked = (date) => {
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {(Array.isArray(days) ? days : []).map((date, i) => {
+        {days.map((date, i) => {
           if (!date) return <div key={i}></div>;
 
           let style = "bg-green-200";

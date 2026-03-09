@@ -26,36 +26,33 @@ const PropertyCalendar = () => {
 
   const fetchCalendarData = async () => {
     try {
+      // console.log("Sending request with:", { year, month });
 
       const res = await api.get("/calendar/month", {
         params: { year, month },
       });
 
-      const apiData = Array.isArray(res?.data?.data)
-        ? res.data.data
-        : [];
+      // console.log("API Response:", res.data.data);
 
-      const mapped = (Array.isArray(apiData) ? apiData : []).map((item) => ({
+      // Convert backend data if needed
+      const mapped = res.data.data.map((item) => ({
         id: item.id,
         name: item.name,
-        days: Array.isArray(item?.days)
-          ? item.days.map((d) => ({
-            date: d?.date,
-            status:
-              d?.status === "available" || d?.status === "A"
-                ? "A"
-                : d?.status === "reserved" || d?.status === "R"
-                  ? "R"
-                  : "H",
-          }))
-          : [],
+        days: item.days?.map((d) => ({
+          date: d.date,
+          status:
+            d.status === "available" || d.status === "A"
+              ? "A"
+              : d.status === "reserved" || d.status === "R"
+                ? "R"
+                : "H",
+        })),
       }));
 
+      // console.log("Mapped Calendar:", mapped);
       setCalendarData(mapped);
-
     } catch (err) {
       console.error("Error fetching calendar:", err);
-      setCalendarData([]);
     }
   };
 
@@ -160,7 +157,7 @@ const PropertyCalendar = () => {
             </thead>
 
             <tbody>
-              {(Array.isArray(calendarData) ? calendarData : []).map((property) => (
+              {calendarData.map((property) => (
                 <tr key={property.id} className="text-center text-sm">
                   <td className="border p-2 font-semibold text-sky-700">
                     {property.id}
@@ -171,9 +168,7 @@ const PropertyCalendar = () => {
                     const dayNumber = index + 1;
 
                     const foundDay = property.days?.find((d) => {
-                      const dayFromApi = d?.date
-                        ? parseInt(d.date.split("-")[2])
-                        : null;
+                      const dayFromApi = parseInt(d.date.split("-")[2]);
                       return dayFromApi === dayNumber;
                     });
 
