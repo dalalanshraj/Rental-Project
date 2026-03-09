@@ -35,7 +35,7 @@ const PropertyCalendar = () => {
         ? res.data.data
         : [];
 
-      const mapped = apiData.map((item) => ({
+      const mapped = (Array.isArray(apiData) ? apiData : []).map((item) => ({
         id: item.id,
         name: item.name,
         days: Array.isArray(item?.days)

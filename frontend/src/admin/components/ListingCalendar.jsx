@@ -32,9 +32,9 @@ export default function ListingCalendar({
       ? res.data.data
       : [];
 
-const blocked = apiData
-  .filter((d) => d.status === "R" || d.status === "H")
-  .map((d) => normalize(new Date(d.date)));
+const blocked = (Array.isArray(apiData) ? apiData : [])
+  .filter((d) => d?.status === "R" || d?.status === "H")
+  .map((d) => normalize(new Date(d?.date)));
         setBlockedDates(blocked);
       })
       .catch(console.error);

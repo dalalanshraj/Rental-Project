@@ -40,15 +40,17 @@ export default function ProCalendar({ listingId }) {
   }
 
   // find if booked
-const isBooked = (date) =>
-  Array.isArray(calendar) &&
-  calendar.find(
+const isBooked = (date) => {
+  if (!Array.isArray(calendar)) return false;
+
+  return calendar.find(
     (c) =>
       c?.date &&
       dayjs(c.date).format("YYYY-MM-DD") ===
         dayjs(date).format("YYYY-MM-DD") &&
       c?.status === "R"
   );
+};
   // 🔥 TURNOVER LOGIC
   const isTurnover = (date) => {
     const prevBooked = isBooked(dayjs(date).subtract(1, "day"));
@@ -94,7 +96,7 @@ const isBooked = (date) =>
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {days.map((date, i) => {
+        {(Array.isArray(days) ? days : []).map((date, i) => {
           if (!date) return <div key={i}></div>;
 
           let style = "bg-green-200";
