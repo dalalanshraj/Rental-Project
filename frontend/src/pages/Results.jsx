@@ -15,24 +15,27 @@ const ResultsPage = ({ listing }) => {
   // FETCH SEARCH RESULTS
   // ==============================
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+    const loadResults = async () => {
+      try {
+        const params = new URLSearchParams(location.search);
 
-    const checkIn = params.get("checkIn");
-    const checkOut = params.get("checkOut");
+        const checkIn = params.get("checkIn");
+        const checkOut = params.get("checkOut");
 
-    // console.log("FRONTEND DATES:", checkIn, checkOut); // 👈 ADD
+        const res = await api.get("/search", {
+          params: { checkIn, checkOut },
+        });
 
-    api.get("/search", {
-      params: { checkIn, checkOut },
-    })
-      .then((res) => {
-        setProperties(res.data.results || []);
+        setProperties(res.data?.results || []);
+      } catch (err) {
+        console.error("Search error:", err);
+        setProperties([]);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        // console.error("Search error:", err);
-        setLoading(false);
-      });
+      }
+    };
+
+    loadResults();
   }, [location.search]);
 
   return (
@@ -80,7 +83,7 @@ const ResultsPage = ({ listing }) => {
             {/* ================= LIST ================= */}
             <div className="h-[80vh] overflow-y-auto space-y-4">
 
-              {properties.map((p) => (
+              {(Array.isArray(properties) ? properties : []).map((p) => (
                 <div
                   key={p._id}
                   onClick={() => setSelectedProperty(p)}
@@ -92,7 +95,11 @@ const ResultsPage = ({ listing }) => {
                 >
                   {/* IMAGE */}
                   <img
-                    src={`${import.meta.env.VITE_API_URL}/${p.photos?.[0]}`}
+                    src={
+                      p.photos?.[0]
+                        ? `${import.meta.env.VITE_API_URL}/${p.photos[0]}`
+                        : "/placeholder.jpg"
+                    }
                     alt={p.property?.title}
                     className="w-full h-44 object-cover rounded-lg"
                   />
@@ -118,9 +125,9 @@ const ResultsPage = ({ listing }) => {
                   </p>
 
                   {/* PRICE (from rates) */}
-                  {p.rates?.length > 0 && (
+                  {Array.isArray(p.rates) && p.rates.length > 0 && (
                     <p className="mt-2 font-semibold text-blue-700">
-                      From ${Math.min(...p.rates.map(r => r.nightly))} / night
+                      From ${Math.min(...p.rates.map((r) => r.nightly))} / night
                     </p>
                   )}
                 </div>
