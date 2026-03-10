@@ -142,10 +142,10 @@ const Bookings = () => {
               <p><b>Check-In:</b> {new Date(selectedBooking.checkIn).toLocaleDateString()}</p>
               <p><b>Check-Out:</b> {new Date(selectedBooking.checkOut).toLocaleDateString()}</p>
 
-              <p><b>Subtotal:</b> ₹{selectedBooking.pricing?.subtotal}</p>
-              <p><b>Cleaning Fee:</b> ₹{selectedBooking.pricing?.cleaningFee}</p>
-              <p><b>Service Fee:</b> ₹{selectedBooking.pricing?.serviceFee}</p>
-              <p><b>Taxes:</b> ₹{selectedBooking.pricing?.taxes}</p>
+              <p><b>Subtotal:</b> ${selectedBooking.pricing?.subtotal}</p>
+              <p><b>Cleaning Fee:</b> ${selectedBooking.pricing?.cleaningFee}</p>
+              <p><b>Service Fee:</b> ${selectedBooking.pricing?.serviceFee}</p>
+              <p><b>Taxes:</b> ${selectedBooking.pricing?.taxes}</p>
 
               <p className="col-span-2 text-lg font-semibold text-black">
                 Total: ${selectedBooking.pricing?.total}

@@ -16,7 +16,7 @@ export default function   ListingCard({
     
   const price =
     listing?.rates && listing.rates.length > 0
-      ? `₹${listing.rates[0].nightly}/night`
+      ? `$${listing.rates[0].nightly}/night`
       : "Call for price";
 
   return (

@@ -36,11 +36,10 @@ const Dashboard = () => {
 
   // example line graph data
   const lineData = [
-    { month: "Jan", bookings: 3 },
-    { month: "Feb", bookings: 6 },
-    { month: "Mar", bookings: 4 },
-    { month: "Apr", bookings: 8 },
-    { month: "May", bookings: 10 },
+    { month: "Jan", bookings: 0 },
+    { month: "Feb", bookings: 0 },
+    { month: "Mar", bookings: 2 },
+
   ];
 
   return (
