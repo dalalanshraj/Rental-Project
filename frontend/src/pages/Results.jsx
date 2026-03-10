@@ -86,7 +86,9 @@ const ResultsPage = ({ listing }) => {
               {(Array.isArray(properties) ? properties : []).map((p) => (
                 <div
                   key={p._id}
-                  onClick={() => setSelectedProperty(p)}
+                  onClick={() => {
+                    setSelectedProperty(p);
+                  }}
                   className={`border rounded-xl p-4 cursor-pointer transition
                     ${selectedProperty?._id === p._id
                       ? "border-blue-600 bg-blue-50"
@@ -96,8 +98,8 @@ const ResultsPage = ({ listing }) => {
                   {/* IMAGE */}
                   <img
                     src={
-                      p.photos?.[0]
-                        ? `${import.meta.env.VITE_API_URL}/${p.photos[0]}`
+                      p.photos && p.photos.length > 0
+                        ? `${import.meta.env.VITE_API_URL}/uploads/${p.photos[0]}`
                         : "/placeholder.jpg"
                     }
                     alt={p.property?.title}
