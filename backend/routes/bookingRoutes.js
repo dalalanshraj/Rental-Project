@@ -5,6 +5,7 @@ import {
   createBooking,
   getAllBookings,
   updateBookingStatus,
+  getDashboardStats ,
 } from "../controllers/bookingController.js";
 
 import { isAuth, isAdmin } from "../middleware/authMiddleware.js";
@@ -15,6 +16,7 @@ const router = express.Router();
 router.post("/create-payment-intent", createPaymentIntent);
 router.post("/preview", previewBooking);
 router.post("/create", createBooking);
+router.get("/admin/dashboard", getDashboardStats);
 
 // ---------------- ADMIN ----------------
 router.get("/", isAuth, isAdmin, getAllBookings);

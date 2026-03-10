@@ -279,3 +279,45 @@ export const createPaymentIntent = async (req, res) => {
 };
 
 
+export const getDashboardStats = async (req, res) => {
+  try {
+
+    const totalUsers = await mongoose.model("User").countDocuments();
+    const totalListing = await Listing.countDocuments();
+    const totalBookings = await Booking.countDocuments();
+    const pendingBookings = await Booking.countDocuments({ status: "pending" });
+
+    // 🔥 MONTHLY BOOKINGS
+    const monthlyBookings = await Booking.aggregate([
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          bookings: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    const months = [
+      "Jan","Feb","Mar","Apr","May","Jun",
+      "Jul","Aug","Sep","Oct","Nov","Dec"
+    ];
+
+    const formatted = monthlyBookings.map((item) => ({
+      month: months[item._id - 1],
+      bookings: item.bookings
+    }));
+
+    res.json({
+      totalUsers,
+      totalListing,
+      totalBookings,
+      pendingBookings,
+      monthlyBookings: formatted
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Dashboard error" });
+  }
+};
