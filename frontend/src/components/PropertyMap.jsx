@@ -11,7 +11,7 @@ const defaultCenter = { lat: 30.3831, lng: -86.4974 };
 
 const PropertyMap = ({ properties, selectedProperty }) => {
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "AIzaSyAtaQpu0ULETk1Q0NXWG46iurqt3w3qE-g",
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   });
 
   const [selected, setSelected] = useState(null);
@@ -97,7 +97,7 @@ const PropertyMap = ({ properties, selectedProperty }) => {
             <img
               src={
                 selected.photos?.[0]
-                  ? `/${selected.photos[0]}`
+                  ? `${import.meta.env.VITE_API_URL}${listing.photos[0]}`
                   : "https://via.placeholder.com/200x120"
               }
               alt={selected.property?.title}
