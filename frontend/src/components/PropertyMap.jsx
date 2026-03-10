@@ -1,136 +1,103 @@
-import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
+import { useState, useRef, useEffect } from "react";
+import {
+  GoogleMap,
+  Marker,
+  InfoWindow,
+  useLoadScript,
+} from "@react-google-maps/api";
 
-const defaultCenter = [30.3831, -86.4974];
-
-// default marker fix (Leaflet icon bug)
-const markerIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41]
-});
+const mapContainerStyle = { width: "100%", height: "100%" };
+const defaultCenter = { lat: 30.3831, lng: -86.4974 };
 
 const PropertyMap = ({ properties, selectedProperty }) => {
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+  });
 
-  const mapRef = useRef(null);
   const [selected, setSelected] = useState(null);
+  const mapRef = useRef(null);
 
-  function MapController({ selectedProperty }) {
-    const map = useMap();
+  const onMapLoad = (map) => {
+    mapRef.current = map;
 
-    useEffect(() => {
-      if (
-        selectedProperty &&
-        selectedProperty.location?.lat &&
-        selectedProperty.location?.lng
-      ) {
-        map.flyTo(
-          [
-            selectedProperty.location.lat,
-            selectedProperty.location.lng
-          ],
-          14,
-          { duration: 1.5 }
-        );
-      }
-    }, [selectedProperty]);
+    // 🟢 FIT MAP TO ALL MARKERS
+    if (properties.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
 
-    return null;
-  }
+      properties.forEach((p) => {
+        if (p.location?.lat && p.location?.lng) {
+          bounds.extend({
+            lat: p.location.lat,
+            lng: p.location.lng,
+          });
+        }
+      });
 
-  // ✅ SELECTED PROPERTY FOCUS
+      map.fitBounds(bounds);
+    }
+  };
+
+  // 🟢 Focus when clicking list item
   useEffect(() => {
-
     if (
       selectedProperty &&
       selectedProperty.location?.lat &&
       selectedProperty.location?.lng &&
       mapRef.current
     ) {
-
-      mapRef.current.flyTo(
-        [
-          selectedProperty.location.lat,
-          selectedProperty.location.lng
-        ],
-        14,
-        { duration: 1.5 }
-      );
-
+      mapRef.current.panTo({
+        lat: selectedProperty.location.lat,
+        lng: selectedProperty.location.lng,
+      });
+      mapRef.current.setZoom(14);
       setSelected(selectedProperty);
     }
-
   }, [selectedProperty]);
 
-
-
-  // ✅ FILTER RESULTS → FIT MAP TO ALL MARKERS
-  useEffect(() => {
-
-    if (!mapRef.current || properties.length === 0) return;
-
-    const bounds = L.latLngBounds();
-
-    properties.forEach((p) => {
-      if (p.location?.lat && p.location?.lng) {
-        bounds.extend([p.location.lat, p.location.lng]);
-      }
-    });
-
-    mapRef.current.fitBounds(bounds, { padding: [50, 50] });
-
-  }, [properties]);
-
+  if (!isLoaded) return <div>Loading Map…</div>;
 
   return (
-    <MapContainer
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      onLoad={onMapLoad}
       center={defaultCenter}
       zoom={10}
-      whenCreated={(map) => (mapRef.current = map)}
-      style={{ width: "100%", height: "100%" }}
     >
-
-      <TileLayer
-        attribution="&copy; OpenStreetMap contributors"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-
-      <MapController selectedProperty={selectedProperty} />
-
-      {/* Multiple markers */}
+      {/* 🟢 MULTIPLE MARKERS */}
       {properties.map((property) => {
-
         if (!property.location?.lat || !property.location?.lng) return null;
 
         return (
           <Marker
             key={property._id}
-            icon={markerIcon}
-            position={[
-              property.location.lat,
-              property.location.lng
-            ]}
-            eventHandlers={{
-              click: () => setSelected(property)
+            position={{
+              lat: property.location.lat,
+              lng: property.location.lng,
             }}
+            onClick={() => setSelected(property)}
+            icon={
+              selected?._id === property._id
+                ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+                : "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+            }
           />
         );
-
       })}
-      {/* Popup */}
+
+      {/* 🟢 INFO WINDOW */}
       {selected && selected.location && (
-        <Popup
-          position={[
-            selected.location.lat,
-            selected.location.lng
-          ]}
+        <InfoWindow
+          position={{
+            lat: selected.location.lat,
+            lng: selected.location.lng,
+          }}
+          onCloseClick={() => setSelected(null)}
         >
           <div className="w-48">
             <img
               src={
                 selected.photos?.[0]
-                  ? `${import.meta.env.VITE_API_URL}/${selected.photos[0]}`
+                  ? `${import.meta.env.VITE_API_URL}${listing.photos[0]}`
                   : "https://via.placeholder.com/200x120"
               }
               alt={selected.property?.title}
@@ -143,9 +110,9 @@ const PropertyMap = ({ properties, selectedProperty }) => {
               {selected.location.address}
             </p>
           </div>
-        </Popup>
+        </InfoWindow>
       )}
-    </MapContainer>
+    </GoogleMap>
   );
 };
 
