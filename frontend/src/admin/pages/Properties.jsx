@@ -43,7 +43,7 @@
 // export default AdminProperties;
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api/axios.js";
 import ListingCard from "../components/ListingDetails.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 
@@ -52,8 +52,8 @@ const Listings = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/listings")
+    api
+      .get("/listings")
       .then((res) => {
         setListings(res.data);
         setLoading(false);

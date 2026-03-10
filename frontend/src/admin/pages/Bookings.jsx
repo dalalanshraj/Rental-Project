@@ -65,7 +65,7 @@ const Bookings = () => {
         </div>
 
         <div>
-          <p><b>Total:</b> ₹{b.pricing?.total}</p>
+          <p><b>Total:</b> ${b.pricing?.total}</p>
 
           <span
             className={`inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full ${
@@ -148,7 +148,7 @@ const Bookings = () => {
               <p><b>Taxes:</b> ₹{selectedBooking.pricing?.taxes}</p>
 
               <p className="col-span-2 text-lg font-semibold text-black">
-                Total: ₹{selectedBooking.pricing?.total}
+                Total: ${selectedBooking.pricing?.total}
               </p>
 
               <p>

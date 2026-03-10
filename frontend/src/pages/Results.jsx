@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios.js";
 import PropertyMap from "../components/PropertyMap";
 import { ArrowUpRight } from "lucide-react";
 
@@ -22,7 +22,7 @@ const ResultsPage = ({ listing }) => {
 
     // console.log("FRONTEND DATES:", checkIn, checkOut); // 👈 ADD
 
-    axios.get("http://localhost:8000/api/search", {
+    api.get("/search", {
       params: { checkIn, checkOut },
     })
       .then((res) => {
@@ -92,7 +92,7 @@ const ResultsPage = ({ listing }) => {
                 >
                   {/* IMAGE */}
                   <img
-                    src={`http://localhost:8000/${p.photos?.[0]}`}
+                    src={`${import.meta.env.VITE_API_URL}/${p.photos?.[0]}`}
                     alt={p.property?.title}
                     className="w-full h-44 object-cover rounded-lg"
                   />

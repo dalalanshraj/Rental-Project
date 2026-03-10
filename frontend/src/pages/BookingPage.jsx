@@ -13,7 +13,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { countryStateData } from "../data/countryStateData";
 
 const stripePromise = loadStripe("pk_test_51SVGLJ2L7pwIgu8amWwqZhnzUD062L9WQNxeuIAb1QQpb01SvoEf48XyN1AARDTzB1KTTHgz01A5j69mbmfizoE300zwDOFaZW");
- 
+
 
 // ================= PAYMENT FORM =================
 function PaymentForm({ guest, pricing, formData, selectedMethod, showPopup }) {
@@ -24,73 +24,84 @@ function PaymentForm({ guest, pricing, formData, selectedMethod, showPopup }) {
   const params = new URLSearchParams(window.location.search);
   const propertyId = params.get("propertyId");
 
-  const handlePayment = async () => {
-    if (!stripe || !elements) return;
-    setLoading(true);
+ const handlePayment = async () => {
+  if (!stripe || !elements) return;
 
-    try {
-      // 🔵 CREATE PAYMENT INTENT
-      const intentRes = await fetch("http://localhost:8000/api/bookings/create-payment-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: pricing.total }),
-      });
+  setLoading(true);
 
-      const { clientSecret } = await intentRes.json();
+  try {
+    // CREATE PAYMENT INTENT
+    const intentRes = await fetch(`${import.meta.env.VITE_API_URL}/bookings/create-payment-intent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: pricing.total }),
+    });
 
-      // 🔵 STRIPE PAYMENT
-      const paymentResult = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement),
-          billing_details: {
-            name: guest.firstName + " " + guest.lastName,
-            email: guest.email,
-          },
+    if (!intentRes.ok) throw new Error("Payment intent failed");
+
+    const { clientSecret } = await intentRes.json();
+
+    // STRIPE PAYMENT
+    const paymentResult = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: elements.getElement(CardElement),
+        billing_details: {
+          name: `${guest.firstName} ${guest.lastName}`,
+          email: guest.email,
         },
-      });
+      },
+    });
 
-      if (paymentResult.error) {
-        showPopup("Payment Error", paymentResult.error.message);
-        setLoading(false);
-        return;
-      }
-
-      // 🔵 CREATE BOOKING
-      const bookingRes = await fetch("http://localhost:8000/api/bookings/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user: guest,
-          pricing,
-          paymentIntentId: paymentResult.paymentIntent.id,
-          propertyId,
-          checkIn: formData.checkIn,
-          checkOut: formData.checkOut,
-          guests: 1,
-        }),
-      });
-
-      const bookingData = await bookingRes.json();
-      const bookingId = bookingData.bookingId;
-
-      // 🔵 CONFIRM BOOKING + BLOCK CALENDAR
-      await fetch(`http://localhost:8000/api/bookings/${bookingId}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-         },
-        credentials: "include",
-        body: JSON.stringify({ status: "confirmed" }),
-      });
-
-      showPopup("Booking Confirmed 🎉", "Payment successful & dates booked!");
-    } catch (err) {
-      // console.log(err);
-      showPopup("Payment Failed", "Something went wrong.");
+    if (paymentResult.error) {
+      setLoading(false);
+      return showPopup("Payment Error", paymentResult.error.message);
     }
 
-    setLoading(false);
-  };
+    // CREATE BOOKING
+    const bookingRes = await fetch(`${import.meta.env.VITE_API_URL}/bookings/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({
+        user: guest,
+        pricing,
+        paymentIntentId: paymentResult.paymentIntent.id,
+        propertyId,
+        checkIn: formData.checkIn,
+        checkOut: formData.checkOut,
+        guests: 1,
+      }),
+    });
+
+    const bookingData = await bookingRes.json();
+
+    if (!bookingRes.ok) {
+      throw new Error(bookingData.message || "Booking failed");
+    }
+
+    const bookingId = bookingData.bookingId;
+
+    // CONFIRM BOOKING
+    await fetch(`${import.meta.env.VITE_API_URL}/bookings/${bookingId}/status`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      credentials: "include",
+      body: JSON.stringify({ status: "confirmed" }),
+    });
+
+    showPopup("Booking Confirmed 🎉", "Payment successful & dates booked!");
+  } catch (err) {
+    console.error(err);
+    showPopup("Payment Failed", "Something went wrong.");
+  }
+
+  setLoading(false);
+};
 
   return (
     <div className="p-6 bg-white rounded-2xl shadow-lg">
@@ -149,22 +160,37 @@ export default function BookingPage() {
   }, []);
 
   // LOAD PRICE PREVIEW
-  useEffect(() => {
-    if (!formData.checkIn || !formData.checkOut || !propertyId) return;
+useEffect(() => {
+  if (!formData.checkIn || !formData.checkOut || !propertyId) return;
 
-    const loadPricing = async () => {
-      const res = await fetch("http://localhost:8000/api/bookings/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ propertyId, checkIn: formData.checkIn, checkOut: formData.checkOut }),
-      });
+  const loadPricing = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/bookings/preview`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            propertyId,
+            checkIn: formData.checkIn,
+            checkOut: formData.checkOut,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to load pricing");
 
       const data = await res.json();
-      setPricing(data);
-    };
+      setPricing(data || {});
+    } catch (error) {
+      console.error("Pricing error:", error);
+    }
+  };
 
-    loadPricing();
-  }, [formData, propertyId]);
+  loadPricing();
+}, [formData.checkIn, formData.checkOut, propertyId]);
 
   const handleGuestChange = (e) =>
     setGuest({ ...guest, [e.target.name]: e.target.value });
