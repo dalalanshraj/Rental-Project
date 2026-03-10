@@ -85,7 +85,9 @@ const PropertyMap = ({ properties, selectedProperty }) => {
       })}
 
       {/* 🟢 INFO WINDOW */}
+
       {selected && selected.location && (
+
         <InfoWindow
           position={{
             lat: selected.location.lat,
@@ -93,14 +95,16 @@ const PropertyMap = ({ properties, selectedProperty }) => {
           }}
           onCloseClick={() => setSelected(null)}
         >
+
           <div className="w-48">
+
             <img
               src={
-                selected.photos?.[0]
-                  ? `${import.meta.env.VITE_API_URL}${listing.photos[0]}`
+                selected?.photos?.[0]
+                  ? `${import.meta.env.VITE_API_URL}/${selected.photos[0].replace(/^\/+/, "")}`
                   : "https://via.placeholder.com/200x120"
               }
-              alt={selected.property?.title}
+              alt={selected?.property?.title}
               className="w-full h-24 object-cover rounded mb-2"
             />
             <h3 className="font-semibold text-sm">

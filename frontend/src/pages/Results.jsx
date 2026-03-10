@@ -4,7 +4,7 @@ import api from "../api/axios.js";
 import PropertyMap from "../components/PropertyMap";
 import { ArrowUpRight } from "lucide-react";
 
-const ResultsPage = ({ listing }) => {
+const ResultsPage = () => {
   const location = useLocation();
 
   const [properties, setProperties] = useState([]);
@@ -84,10 +84,12 @@ const ResultsPage = ({ listing }) => {
             <div className="h-[80vh] overflow-y-auto space-y-4">
 
               {(Array.isArray(properties) ? properties : []).map((p) => (
+
                 <div
                   key={p._id}
                   onClick={() => {
                     setSelectedProperty(p);
+                    console.log("PHOTO:", p.photos?.[0]);
                   }}
                   className={`border rounded-xl p-4 cursor-pointer transition
                     ${selectedProperty?._id === p._id
@@ -99,7 +101,7 @@ const ResultsPage = ({ listing }) => {
                   <img
                     src={
                       p.photos && p.photos.length > 0
-                        ? `${import.meta.env.VITE_API_URL}/uploads/${p.photos[0]}`
+                        ? `${import.meta.env.VITE_API_URL}${p.photos[0]}`
                         : "/placeholder.jpg"
                     }
                     alt={p.property?.title}
