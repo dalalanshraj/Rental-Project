@@ -59,8 +59,9 @@ export default function ActivitiesTab({ listingId, goNextTab, initialData = {} }
       `/listings/${listingId}/activities`,
       activities
     );
-    alert("Activities saved");
+    // alert("Activities saved");
     goNextTab();
+    return
   };
 
   return (

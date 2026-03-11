@@ -22,7 +22,8 @@ import {
   editExtraFee,
   deleteExtraFee,
   toggleListingStatus,
-  getPublishedListings
+  getPublishedListings,
+  deletePhoto
   
 
 } from "../controllers/listingController.js";
@@ -60,6 +61,7 @@ router.put(
   upload.array("photos", 30),
   updatePhotos
 );
+router.delete("/:id/photos/:filename", deletePhoto);
 router.put("/:id/video", updateVideo);
 router.put("/:id/rates", updateRates);
 router.put("/:id/rates/delete", deleteRate);

@@ -49,10 +49,10 @@ const Dashboard = () => {
 
         {/* ================= STATS CARDS ================= */}
         <div className="grid grid-cols-4 gap-4 mb-8">
-           <AnimatedCard title="Users" value={stats.totalUsers} color={COLORS[0]} />
-  <AnimatedCard title="Properties" value={stats.totalListing} color={COLORS[1]} />
-  <AnimatedCard title="Bookings" value={stats.totalBookings} color={COLORS[2]} />
-  <AnimatedCard title="Pending" value={stats.pendingBookings} color={COLORS[3]} />
+          <AnimatedCard title="Users" value={stats.totalUsers} color={COLORS[0]} />
+          <AnimatedCard title="Properties" value={stats.totalListing} color={COLORS[1]} />
+          <AnimatedCard title="Bookings" value={stats.totalBookings} color={COLORS[2]} />
+          <AnimatedCard title="Pending" value={stats.pendingBookings} color={COLORS[3]} />
         </div>
 
         {/* ================= CHARTS ================= */}
@@ -133,7 +133,7 @@ const Dashboard = () => {
 
 
 // ================= ANIMATED CARD =================
-const AnimatedCard = ({ title, value , color }) => (
+const AnimatedCard = ({ title, value, color }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
     style={{ backgroundColor: color }}

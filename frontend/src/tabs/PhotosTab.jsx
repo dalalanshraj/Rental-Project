@@ -55,19 +55,20 @@ export default function PhotosTab({ listingId, goNextTab }) {
   // ===========================
   // DELETE PHOTO
   // ===========================
-  const deletePhoto = async (photoId) => {
-    if (!window.confirm("Delete photo?")) return;
+  const deletePhoto = async (filename) => {
+  if (!window.confirm("Delete photo?")) return;
 
-    try {
-      const res = await api.delete(
-        `/listings/${listingId}/photos/${photoId}`
-      );
+  try {
+    const res = await api.delete(
+      `/listings/${listingId}/photos/${filename}`
+    );
 
-      setPhotos(res.data.photos);
-    } catch {
-      alert("Delete failed");
-    }
-  };
+    setPhotos(res.data.photos);
+  } catch (err) {
+    console.log(err);
+    alert("Delete failed");
+  }
+};
 
   return (
     <div className="space-y-6">
@@ -91,13 +92,13 @@ export default function PhotosTab({ listingId, goNextTab }) {
     <div key={photo} className="relative border rounded overflow-hidden">
 
       <img
-        src={`${import.meta.env.VITE_API_URL}/${photo}`}
+        src={`${import.meta.env.VITE_API_URL}${photo}`}
         alt="listing"
         className="w-full h-32 object-cover"
       />
 
       <button
-        onClick={() => deletePhoto(photo._id)}
+        onClick={() => deletePhoto(photo.split("/").pop())}
         className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded"
       >
         ✕

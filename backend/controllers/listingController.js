@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
 import Listing from "../models/Listing.js";
+import fs from "fs";
+import path from "path";
 dotenv.config();
 
 export const publishListing = async (req, res) => {
@@ -42,9 +44,6 @@ export const createListing = async (req, res) => {
 
   res.json(listing);
 };
-
-
-
 
 // UPDATE PROPERTY TAB
 export const updateProperty = async (req, res) => {
@@ -251,7 +250,7 @@ export const updatePhotos = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const newPhotos = req.files?.map(file => `/uploads/${file.filename}`) || [];
+    const newPhotos = req.files?.map(file => `/api/uploads/${file.filename}`) || [];
 
     if (!newPhotos.length) {
       return res.status(400).json({ error: "No photos uploaded" });
@@ -282,6 +281,41 @@ export const updatePhotos = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Photo upload failed" });
+  }
+};
+
+export const deletePhoto = async (req, res) => {
+  try {
+    const { id, filename } = req.params;
+
+    const listing = await Listing.findById(id);
+
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+
+    // remove from DB
+    listing.photos = listing.photos.filter(
+      (p) => !p.includes(filename)
+    );
+
+    await listing.save();
+
+    // remove file from server
+   const filePath = path.join("uploads", filename);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    res.json({
+      message: "Photo deleted",
+      photos: listing.photos,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Delete failed" });
   }
 };
 
