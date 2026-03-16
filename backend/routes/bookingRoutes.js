@@ -6,7 +6,8 @@ import {
   getAllBookings,
   updateBookingStatus,
   getDashboardStats ,
-  deleteBooking
+  deleteBooking,
+  
 } from "../controllers/bookingController.js";
 
 import { isAuth, isAdmin } from "../middleware/authMiddleware.js";
@@ -19,6 +20,7 @@ router.post("/preview", previewBooking);
 router.post("/create", createBooking);
 router.get("/admin/dashboard", getDashboardStats);
 router.delete("/:id", deleteBooking);
+
 
 // ---------------- ADMIN ----------------
 router.get("/", isAuth, isAdmin, getAllBookings);

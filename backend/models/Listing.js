@@ -124,30 +124,37 @@ const listingSchema = new mongoose.Schema(
     ],
   //  Calendar Model
 
-calendar: [
-  {
-    date: {
-      type: Date,
-      required: true
+calendar: {
+  type: [
+    {
+      date: {
+        type: Date,
+        required: true,
+        validate: {
+          validator: function (value) {
+            return value instanceof Date && !isNaN(value.getTime());
+          },
+          message: "Invalid calendar date",
+        },
+      },
+
+      status: {
+        type: String,
+        enum: ["A", "R", "H"], // Available / Reserved / Hold
+        default: "A",
+      },
+
+      source: {
+        type: String,
+        enum: ["internal", "booking", "admin", "ical"],
+        default: "internal",
+      },
+
+      price: Number,
     },
-
-    status: {
-      type: String,
-      enum: ["A", "R", "H"],   // Available / Reserved / Turnover
-      default: "A"
-    },
-
-    source: {
-      type: String,
-      enum: ["internal", "booking", "admin", "ical"],
-      default: "internal"
-    },
-
-    price: Number
-  }
-],
-
-
+  ],
+  default: [],
+},
 
   },
   

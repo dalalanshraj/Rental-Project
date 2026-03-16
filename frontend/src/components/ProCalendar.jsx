@@ -7,64 +7,59 @@ export default function ProCalendar({ listingId }) {
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
   useEffect(() => {
-    api
-      .get(`/listings/${listingId}/calendar`)
-      .then((res) => setCalendar(res.data || []))
-      .catch(() => {});
+    const fetchCalendar = async () => {
+      try {
+        const res = await api.get(`/listings/${listingId}/calendar`);
+        console.log("API CALENDAR RESPONSE:", res.data);
+        setCalendar(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Calendar fetch error:", err);
+        setCalendar([]);
+      }
+    };
+
+    if (listingId) fetchCalendar();
   }, [listingId]);
+
+  console.log("listingId frontend:", listingId);
+  console.log("calendar state frontend:", calendar);
 
   const start = currentMonth.startOf("month");
   const end = currentMonth.endOf("month");
 
   const days = [];
-  for (let i = 0; i < start.day(); i++) days.push(null);
+  const startDay = start.day() === 0 ? 6 : start.day() - 1;
+
+  for (let i = 0; i < startDay; i++) days.push(null);
 
   for (let d = 1; d <= end.date(); d++) {
-    days.push(currentMonth.date(d));
+    days.push(dayjs(new Date(currentMonth.year(), currentMonth.month(), d)));
   }
 
-  // find if booked
-const isBooked = (date) =>
-  calendar.find(
-    (c) =>
-      c.date === dayjs(date).format("YYYY-MM-DD") &&
-      c.status === "R"
-  );
-
-  // 🔥 TURNOVER LOGIC
-  const isTurnover = (date) => {
-    const prevBooked = isBooked(dayjs(date).subtract(1, "day"));
-    const nextBooked = isBooked(dayjs(date).add(1, "day"));
-
-    const todayBooked = isBooked(date);
-
-    if (!todayBooked && (prevBooked || nextBooked)) {
-      return true;
-    }
-
-    return false;
+  const getEntry = (date) => {
+    return calendar.find(
+      (c) => dayjs(c.date).format("YYYY-MM-DD") === dayjs(date).format("YYYY-MM-DD")
+    );
   };
 
   return (
+    
     <div className="bg-white shadow rounded-xl p-6 mt-10">
+       <div className="text-3xl text-red-600 font-bold">
+    TEST CALENDAR
+  </div>
+      <div className="mb-4 text-sm text-red-500">
+        Calendar entries: {calendar.length}
+      </div>
+
       <div className="flex justify-between items-center mb-4">
-        <button
-          onClick={() =>
-            setCurrentMonth(currentMonth.subtract(1, "month"))
-          }
-        >
+        <button onClick={() => setCurrentMonth(currentMonth.subtract(1, "month"))}>
           ◀
         </button>
 
-        <h2 className="text-xl font-bold">
-          {currentMonth.format("MMMM YYYY")}
-        </h2>
+        <h2 className="text-xl font-bold">{currentMonth.format("MMMM YYYY")}</h2>
 
-        <button
-          onClick={() =>
-            setCurrentMonth(currentMonth.add(1, "month"))
-          }
-        >
+        <button onClick={() => setCurrentMonth(currentMonth.add(1, "month"))}>
           ▶
         </button>
       </div>
@@ -79,15 +74,14 @@ const isBooked = (date) =>
         {days.map((date, i) => {
           if (!date) return <div key={i}></div>;
 
+          const entry = getEntry(date);
+
           let style = "bg-green-200";
 
-          if (isBooked(date)) {
+          if (entry?.status === "R") {
             style = "bg-red-500 text-white";
-          }
-
-          else if (isTurnover(date)) {
-            style =
-              "bg-gradient-to-r from-red-500 to-green-200 text-white";
+          } else if (entry?.status === "H") {
+            style = "bg-gradient-to-r from-red-500 to-green-200 text-white";
           }
 
           return (
@@ -100,21 +94,6 @@ const isBooked = (date) =>
           );
         })}
       </div>
-
-      <div className="flex gap-6 mt-6 text-sm">
-        <div className="flex gap-2 items-center">
-          <div className="w-4 h-4 bg-green-300"></div> Available
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <div className="w-4 h-4 bg-red-500"></div> Booked
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <div className="w-4 h-4 bg-gradient-to-r from-red-500 to-green-300"></div>
-          Turnover
-        </div>
-      </div>
     </div>
   );
-}
+} 

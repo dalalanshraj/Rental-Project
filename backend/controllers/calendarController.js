@@ -1,13 +1,48 @@
 import Listing from "../models/Listing.js";
 
+const toValidDate = (value) => {
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+};
+
+const dateOnly = (value) => {
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+};
+
+const normalizeCalendar = (calendar = []) => {
+  if (!Array.isArray(calendar)) return [];
+
+  return calendar
+    .map((item) => {
+      const d = toValidDate(item?.date);
+      if (!d) return null;
+
+      return {
+        date: d,
+        status: ["A", "R", "H"].includes(item?.status) ? item.status : "A",
+        source: ["internal", "booking", "admin", "ical"].includes(item?.source)
+          ? item.source
+          : "internal",
+        price: item?.price,
+      };
+    })
+    .filter(Boolean);
+};
 
 export const addCalendarDate = async (req, res) => {
   try {
     const { id } = req.params;
-    const { date, status } = req.body;
+    const { date, status = "R", source = "admin", price } = req.body;
 
-    if (!date || !status) {
-      return res.status(400).json({ error: "Date & status required" });
+    if (!date) {
+      return res.status(400).json({ error: "Date required" });
+    }
+
+    const validDate = toValidDate(date);
+    if (!validDate) {
+      return res.status(400).json({ error: "Invalid date format" });
     }
 
     const listing = await Listing.findById(id);
@@ -15,17 +50,22 @@ export const addCalendarDate = async (req, res) => {
       return res.status(404).json({ error: "Listing not found" });
     }
 
-    // Remove existing entry for same date
+    listing.calendar = normalizeCalendar(listing.calendar);
+
+    const target = dateOnly(validDate);
+
     listing.calendar = listing.calendar.filter(
-      (c) => c.date.toISOString().split("T")[0] !== date
+      (c) => dateOnly(c.date) !== target
     );
 
-    // Push new calendar entry
     listing.calendar.push({
-      date: new Date(date),
+      date: validDate,
       status,
-      source: "admin",
+      source,
+      price,
     });
+
+    listing.calendar = normalizeCalendar(listing.calendar);
 
     await listing.save();
 
@@ -34,43 +74,52 @@ export const addCalendarDate = async (req, res) => {
       calendar: listing.calendar,
     });
   } catch (err) {
-    console.error("Calendar error:", err);
+    console.error("addCalendarDate error:", err);
     res.status(500).json({ error: "Calendar update failed" });
   }
 };
 
-/**
- * ❌ REMOVE DATE (MAKE AVAILABLE)
- */
 export const removeCalendarDate = async (req, res) => {
   try {
     const { id } = req.params;
     const { date } = req.body;
+
+    if (!date) {
+      return res.status(400).json({ error: "Date required" });
+    }
+
+    const validDate = toValidDate(date);
+    if (!validDate) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
 
     const listing = await Listing.findById(id);
     if (!listing) {
       return res.status(404).json({ error: "Listing not found" });
     }
 
+    listing.calendar = normalizeCalendar(listing.calendar);
+
+    const target = dateOnly(validDate);
+
     listing.calendar = listing.calendar.filter(
-      (c) => c.date.toISOString().split("T")[0] !== date
+      (c) => dateOnly(c.date) !== target
     );
 
     await listing.save();
 
     res.json({
-      message: "Date unblocked",
+      message: "Date removed successfully",
       calendar: listing.calendar,
     });
   } catch (err) {
+    console.error("removeCalendarDate error:", err);
     res.status(500).json({ error: "Failed to remove date" });
   }
 };
 
-// ================================
-// GET CALENDAR
-// ================================
 export const getCalendar = async (req, res) => {
+  console.log("GET CALENDAR listing id:", req.params.id);
   try {
     const listing = await Listing.findById(req.params.id).select("calendar");
 
@@ -78,71 +127,175 @@ export const getCalendar = async (req, res) => {
       return res.status(404).json({ error: "Listing not found" });
     }
 
-    res.json(listing.calendar);
+    res.json(normalizeCalendar(listing.calendar));
   } catch (err) {
+    console.error("getCalendar error:", err);
     res.status(500).json({ error: "Calendar fetch failed" });
   }
 };
 
-// ================================
-// BLOCK DATES (ADMIN)
-// ================================
 export const blockDates = async (req, res) => {
   try {
-    const { startDate, endDate, status = "H" } = req.body;
+    const { startDate, endDate, status = "H", source = "admin" } = req.body;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: "Start date and end date required" });
+    }
+
+    const start = toValidDate(startDate);
+    const end = toValidDate(endDate);
+
+    if (!start || !end) {
+      return res.status(400).json({ error: "Invalid startDate or endDate" });
+    }
+
+    if (start > end) {
+      return res.status(400).json({ error: "Start date cannot be after end date" });
+    }
 
     const listing = await Listing.findById(req.params.id);
     if (!listing) {
       return res.status(404).json({ error: "Listing not found" });
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    listing.calendar = normalizeCalendar(listing.calendar);
 
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const exists = listing.calendar.find(
-        (c) => c.date.toISOString().slice(0, 10) === d.toISOString().slice(0, 10)
-      );
+      const current = new Date(d);
+      const key = dateOnly(current);
+      if (!key) continue;
+
+      const exists = listing.calendar.some((c) => dateOnly(c.date) === key);
 
       if (!exists) {
         listing.calendar.push({
-          date: new Date(d),
+          date: current,
           status,
-          source: "admin",
+          source,
         });
       }
     }
 
+    listing.calendar = normalizeCalendar(listing.calendar);
+
     await listing.save();
-    res.json({ message: "Dates blocked successfully" });
+
+    res.json({
+      message: "Dates blocked successfully",
+      calendar: listing.calendar,
+    });
   } catch (err) {
+    console.error("blockDates error:", err);
     res.status(500).json({ error: "Block failed" });
   }
 };
 
-// ================================
-// UNBLOCK DATES
-// ================================
 export const unblockDates = async (req, res) => {
   try {
     const { startDate, endDate } = req.body;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: "Start date and end date required" });
+    }
+
+    const start = toValidDate(startDate);
+    const end = toValidDate(endDate);
+
+    if (!start || !end) {
+      return res.status(400).json({ error: "Invalid startDate or endDate" });
+    }
+
+    if (start > end) {
+      return res.status(400).json({ error: "Start date cannot be after end date" });
+    }
 
     const listing = await Listing.findById(req.params.id);
     if (!listing) {
       return res.status(404).json({ error: "Listing not found" });
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    listing.calendar = normalizeCalendar(listing.calendar);
 
     listing.calendar = listing.calendar.filter((c) => {
-      const d = new Date(c.date);
+      const d = toValidDate(c.date);
+      if (!d) return false;
       return d < start || d > end;
     });
 
     await listing.save();
-    res.json({ message: "Dates unblocked successfully" });
+
+    res.json({
+      message: "Dates unblocked successfully",
+      calendar: listing.calendar,
+    });
   } catch (err) {
+    console.error("unblockDates error:", err);
     res.status(500).json({ error: "Unblock failed" });
+  }
+};
+
+export const cleanDuplicateCalendar = async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+
+    const rank = (item) => {
+      if (item?.source === "booking" && item?.status === "R") return 5;
+      if (item?.source === "booking" && item?.status === "H") return 4;
+      if (item?.source === "admin") return 3;
+      if (item?.source === "internal") return 2;
+      if (item?.source === "ical") return 1;
+      return 0;
+    };
+
+    const map = new Map();
+
+    for (const item of normalizeCalendar(listing.calendar)) {
+      const key = dateOnly(item.date);
+      if (!key) continue;
+
+      if (!map.has(key)) {
+        map.set(key, item);
+      } else {
+        const oldItem = map.get(key);
+        if (rank(item) >= rank(oldItem)) {
+          map.set(key, item);
+        }
+      }
+    }
+
+    listing.calendar = Array.from(map.values());
+    await listing.save();
+
+    res.json({
+      message: "Duplicate calendar cleaned",
+      calendar: listing.calendar,
+    });
+  } catch (err) {
+    console.error("cleanDuplicateCalendar error:", err);
+    res.status(500).json({ error: "Cleanup failed" });
+  }
+};
+
+export const clearCalendar = async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+      listing.calendar = [];
+    await listing.save();
+
+    res.json({
+      message: "Calendar cleared successfully",
+      calendar: [],
+    });
+  } catch (err) {
+    console.error("clearCalendar error:", err);
+    res.status(500).json({ error: "Failed to clear calendar" });
   }
 };

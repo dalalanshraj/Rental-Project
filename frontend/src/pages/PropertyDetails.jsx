@@ -31,6 +31,7 @@ const PropertyDetail = () => {
 
   const [blockedDates, setBlockedDates] = useState([]);
   const [openInquiry, setOpenInquiry] = useState(false);
+  const [calendarData, setCalendarData] = useState([]);
 
   // ================= FETCH LISTING =================
   useEffect(() => {
@@ -45,19 +46,27 @@ const PropertyDetail = () => {
 
   // ================= FETCH CALENDAR =================
   useEffect(() => {
-    api
-      .get(`/listings/${id}/calendar`)
-      .then((res) => {
-        // ❌ only full booked block
-        const blocked = res.data
-          .filter((d) => d.status === "R")
-          .map((d) => new Date(d.date));
+  api
+    .get(`/listings/${id}/calendar`)
+    .then((res) => {
+      const calendar = Array.isArray(res.data) ? res.data : [];
 
-        setBlockedDates(blocked);
-      })
-      .catch((err) => 
-        console.log("Server error", err));
-  }, [id]);
+      setCalendarData(calendar);
+
+      const blocked = calendar
+        .filter((d) => d.status === "R")
+        .map((d) => new Date(d.date));
+
+      setBlockedDates(blocked);
+
+      console.log("PROPERTY DETAIL CALENDAR:", calendar);
+    })
+    .catch((err) => {
+      console.log("Server error", err);
+      setCalendarData([]);
+      setBlockedDates([]);
+    });
+}, [id]);
 
   if (loading) return <p className="p-10">Loading...</p>;
   if (!listing) return <p className="p-10">Property not found</p>;
@@ -169,7 +178,7 @@ const PropertyDetail = () => {
           <h2 className="text-2xl font-semibold mt-8 mb-4">Activities</h2>
           {activitiesData.map((section) => {
             const selected = section.options.filter(
-              (item) => listing.Activities?.[item]
+              (item) => listing.activities?.[item]
             );
             if (selected.length === 0) return null;
 
@@ -218,7 +227,7 @@ const PropertyDetail = () => {
           )}
 
           {/* CALENDAR */}
-          <ProCalendar listingId={id} />
+         <ProCalendar calendar={calendarData} />  
 
           {/* REVIEWS */}
           {publishedReviews.length > 0 && (
