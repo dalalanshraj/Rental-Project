@@ -85,6 +85,16 @@ const PropertyDetail = () => {
   const getMapEmbedUrl = (lat, lng) =>
     `https://www.google.com/maps?q=${lat},${lng}&z=14&output=embed`;
 
+  const formatDate = (date) => {
+  if (!date) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
   return (
     <>
       {/* GALLERY */}
@@ -138,6 +148,28 @@ const PropertyDetail = () => {
           {amenitiesData.map((section) => {
             const selected = section.options.filter(
               (item) => listing.amenities?.[item]
+            );
+            if (selected.length === 0) return null;
+
+            return (
+              <div key={section.title} className="mb-6">
+                <h5 className="bg-[#185089] text-white p-2 rounded-xl text-lg mb-2">
+                  {section.title}
+                </h5>
+
+                <ul className="grid grid-cols-2 md:grid-cols-3 gap-2 list-disc ml-6">
+                  {selected.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+           {/* Activities */}
+          <h2 className="text-2xl font-semibold mt-8 mb-4">Activities</h2>
+          {activitiesData.map((section) => {
+            const selected = section.options.filter(
+              (item) => listing.Activities?.[item]
             );
             if (selected.length === 0) return null;
 
@@ -288,13 +320,13 @@ const PropertyDetail = () => {
 
       {/* BOOKING MODAL */}
       {openBooking && (
-        <BookingPreviewModal
-          propertyId={id}
-          checkIn={checkIn}
-          checkOut={checkOut}
-          onClose={() => setOpenBooking(false)}
-        />
-      )}
+  <BookingPreviewModal
+    propertyId={id}
+    checkIn={formatDate(checkIn)}
+    checkOut={formatDate(checkOut)}
+    onClose={() => setOpenBooking(false)}
+  />
+)}
     </>
   );
 };

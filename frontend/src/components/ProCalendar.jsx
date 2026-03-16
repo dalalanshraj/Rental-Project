@@ -24,13 +24,12 @@ export default function ProCalendar({ listingId }) {
   }
 
   // find if booked
-  const isBooked = (date) =>
-    calendar.find(
-      (c) =>
-        dayjs(c.date).format("YYYY-MM-DD") ===
-          dayjs(date).format("YYYY-MM-DD") &&
-        c.status === "R"
-    );
+const isBooked = (date) =>
+  calendar.find(
+    (c) =>
+      c.date === dayjs(date).format("YYYY-MM-DD") &&
+      c.status === "R"
+  );
 
   // 🔥 TURNOVER LOGIC
   const isTurnover = (date) => {

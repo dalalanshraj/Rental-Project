@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios.js";
+import { useModal } from "../context/ModalContext";
 
 export default function PhotosTab({ listingId, goNextTab }) {
   const [photos, setPhotos] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const { showModal } = useModal();
 
   // ===========================
   // LOAD EXISTING PHOTOS
@@ -23,7 +25,7 @@ export default function PhotosTab({ listingId, goNextTab }) {
   // UPLOAD PHOTOS
   // ===========================
   const uploadPhotos = async (files) => {
-    if (!listingId) return alert("Create listing first");
+    if (!listingId) return showModal("Create listing first");
 
     setUploading(true);
 
@@ -46,7 +48,7 @@ export default function PhotosTab({ listingId, goNextTab }) {
 
       setPhotos(res.data.photos); // updated list
     } catch (err) {
-      alert("Upload failed");
+      showModal("Upload failed");
     } finally {
       setUploading(false);
     }
@@ -56,19 +58,19 @@ export default function PhotosTab({ listingId, goNextTab }) {
   // DELETE PHOTO
   // ===========================
   const deletePhoto = async (filename) => {
-  if (!window.confirm("Delete photo?")) return;
+    if (!window.confirm("Delete photo?")) return;
 
-  try {
-    const res = await api.delete(
-      `/listings/${listingId}/photos/${filename}`
-    );
-
-    setPhotos(res.data.photos);
-  } catch (err) {
-    console.log(err);
-    alert("Delete failed");
-  }
-};
+    try {
+      const res = await api.delete(
+        `/listings/${listingId}/photos/${filename}`
+      );
+      
+      setPhotos(res.data.photos);
+    } catch (err) {
+      console.log(err);
+      showModal("Delete failed");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -88,25 +90,25 @@ export default function PhotosTab({ listingId, goNextTab }) {
 
       {/* Preview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-  {photos.map((photo) => (
-    <div key={photo} className="relative border rounded overflow-hidden">
+        {photos.map((photo) => (
+          <div key={photo} className="relative border rounded overflow-hidden">
 
-      <img
-        src={`${import.meta.env.VITE_API_URL}${photo}`}
-        alt="listing"
-        className="w-full h-32 object-cover"
-      />
+            <img
+              src={`${import.meta.env.VITE_API_URL}${photo}`}
+              alt="listing"
+              className="w-full h-32 object-cover"
+            />
 
-      <button
-        onClick={() => deletePhoto(photo.split("/").pop())}
-        className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded"
-      >
-        ✕
-      </button>
+            <button
+              onClick={() => deletePhoto(photo.split("/").pop())}
+              className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded"
+            >
+              ✕
+            </button>
 
-    </div>
-  ))}
-</div>
+          </div>
+        ))}
+      </div>
 
       {/* NEXT BUTTON */}
       <div className="pt-6">

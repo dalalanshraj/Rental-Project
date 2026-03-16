@@ -30,6 +30,16 @@ const Bookings = () => {
     api.put(`/bookings/${id}/status`, { status }).then(load);
   };
 
+  const handleDelete = async (id) => {
+
+  if (!window.confirm("Delete this booking?")) return;
+
+  await api.delete(`/bookings/${id}`);
+
+  setBookings(prev => prev.filter(b => b._id !== id));
+
+};
+
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold mb-8 text-gray-800">
@@ -99,6 +109,12 @@ const Bookings = () => {
         >
           Details
         </button>
+       <button
+  onClick={() => handleDelete(b._id)}
+  className="bg-red-600 text-white px-3 py-1 rounded"
+>
+  Delete
+</button>
 
         {b.status === "pending" && (
           <>

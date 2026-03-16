@@ -6,8 +6,8 @@ const PropertyCard = ({ listing }) => {
   if (!listing) return null;
 
   const image =
-  listing?.photos && listing.photos.length > 0
-    ? `${import.meta.env.VITE_API_URL}${listing.photos[0]}`
+  listing?.photos?.length > 0
+    ? `${import.meta.env.VITE_API_URL}${listing.photos[0].replace("/api","")}`
     : "https://via.placeholder.com/400x300?text=No+Image";
 
   const price =

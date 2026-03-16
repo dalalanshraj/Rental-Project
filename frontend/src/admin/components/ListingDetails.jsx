@@ -1,19 +1,20 @@
 import { Link } from "react-router-dom";
 
 
-export default function   ListingCard({
+export default function ListingCard({
   listing,
   onToggleStatus,
   onDelete,
 }) {
-  // 🛑 SAFETY GUARD (MOST IMPORTANT)
+
   if (!listing) return null;
 
-  const image =
-  listing?.photos && listing.photos.length > 0
+const image =
+  listing?.photos?.length > 0
     ? `${import.meta.env.VITE_API_URL}${listing.photos[0]}`
     : "https://via.placeholder.com/400x300?text=No+Image";
-    
+  console.log("photos:", listing.photos);
+  console.log("image url:", image);
   const price =
     listing?.rates && listing.rates.length > 0
       ? `$${listing.rates[0].nightly}/night`
@@ -26,6 +27,7 @@ export default function   ListingCard({
       <div className="relative">
         <img
           src={image}
+          
           alt={listing?.property?.title || "Listing image"}
           className="h-48 w-full object-cover"
         />

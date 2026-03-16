@@ -10,8 +10,10 @@ const mapContainerStyle = { width: "100%", height: "100%" };
 const defaultCenter = { lat: 30.3831, lng: -86.4974 };
 
 const PropertyMap = ({ properties, selectedProperty }) => {
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
   });
 
   const [selected, setSelected] = useState(null);
@@ -101,7 +103,7 @@ const PropertyMap = ({ properties, selectedProperty }) => {
             <img
               src={
                 selected?.photos?.[0]
-                  ? `${import.meta.env.VITE_API_URL}/${selected.photos[0].replace(/^\/+/, "")}`
+                  ? `${import.meta.env.VITE_API_URL}${selected.photos[0].replace(/^\/api/, "")}`
                   : "https://via.placeholder.com/200x120"
               }
               alt={selected?.property?.title}

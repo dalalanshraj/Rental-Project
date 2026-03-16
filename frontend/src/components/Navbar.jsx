@@ -45,9 +45,9 @@ const Navbar = () => {
     { name: "COMMUNITIES" },
     { name: "WHAT WE OFFER" },
     { name: "SPECIALS", link: "/specials" },
-    { name: "ACTIVITIES", link: "/activities" },
+    // { name: "ACTIVITIES", link: "/activities" },
     { name: "REVIEWS", link: "/reviews" },
-    { name: "CALENDARS", link: "/calendars" },
+    // { name: "CALENDARS", link: "/calendars" },
    
   ];
 

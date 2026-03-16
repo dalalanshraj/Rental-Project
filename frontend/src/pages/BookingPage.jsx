@@ -153,11 +153,19 @@ export default function BookingPage() {
 
   // GET DATES FROM URL
   useEffect(() => {
-    const ci = params.get("checkIn");
-    const co = params.get("checkOut");
-    if (ci) setFormData((p) => ({ ...p, checkIn: ci }));
-    if (co) setFormData((p) => ({ ...p, checkOut: co }));
-  }, []);
+
+  const rawCheckIn = params.get("checkIn");
+  const rawCheckOut = params.get("checkOut");
+
+  const ci = rawCheckIn ? rawCheckIn.split("T")[0] : "";
+  const co = rawCheckOut ? rawCheckOut.split("T")[0] : "";
+
+  setFormData({
+    checkIn: ci,
+    checkOut: co
+  });
+
+}, []);
 
   // LOAD PRICE PREVIEW
 useEffect(() => {
@@ -203,13 +211,23 @@ useEffect(() => {
     setStep(2);
   };
 
-  const pretty = (iso) =>
-    new Date(iso).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+ const pretty = (dateStr) => {
+  if (!dateStr) return "";
 
+  const [year, month, day] = dateStr.split("-");
+
+  const safe = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day)
+  );
+
+  return safe.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
   return (
     <>
       {/* HERO */}

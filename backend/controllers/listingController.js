@@ -82,8 +82,6 @@ export const getAllListings = async (req, res) => {
   }
 };
 
-
-
 //  USER – Get listing by ID
 
 export const getListingById = async (req, res) => {
@@ -250,7 +248,7 @@ export const updatePhotos = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const newPhotos = req.files?.map(file => `/api/uploads/${file.filename}`) || [];
+    const newPhotos = req.files?.map(file => `/uploads/${file.filename}`) || [];
 
     if (!newPhotos.length) {
       return res.status(400).json({ error: "No photos uploaded" });

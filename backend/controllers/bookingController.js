@@ -22,8 +22,8 @@ export const previewBooking = async (req, res) => {
       return res.status(404).json({ error: "Property not found" });
     }
 
-    const start = new Date(checkIn);
-    const end = new Date(checkOut);
+    const start = new Date(checkIn + "T00:00:00");
+    const end = new Date(checkOut + "T00:00:00");
 
     const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
     if (nights <= 0) {
@@ -136,11 +136,15 @@ export const createBooking = async (req, res) => {
       return res.status(404).json({ error: "Property not found" });
     }
 
-    // create booking
+    // ✅ FIXED DATE (timezone safe)
+    const start = new Date(checkIn + "T12:00:00");
+    const end = new Date(checkOut + "T12:00:00");
+
+    // CREATE BOOKING
     const booking = new Booking({
       property: propertyId,
-      checkIn,
-      checkOut,
+      checkIn: start,
+      checkOut: end,
       guests,
       nights: pricing.nights,
       user,
@@ -155,13 +159,9 @@ export const createBooking = async (req, res) => {
 
     await booking.save();
 
-    // 🔥 BLOCK ONLY STAY NIGHTS
-    const start = new Date(checkIn);
-    const end = new Date(checkOut);
-
+    // 🔥 BLOCK STAY NIGHTS IN CALENDAR
     for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
 
-      // avoid duplicate block
       const exists = listing.calendar.find(c =>
         new Date(c.date).toDateString() === d.toDateString()
       );
@@ -205,31 +205,31 @@ export const updateBookingStatus = async (req, res) => {
   }
 
   // ✅ CONFIRM
-if (status === "confirmed") {
-  const property = await Listing.findById(booking.property);
+  if (status === "confirmed") {
+    const property = await Listing.findById(booking.property);
 
-  const start = new Date(booking.checkIn);
-  const end = new Date(booking.checkOut);
+    const start = new Date(booking.checkIn + "T00:00:00");
+    const end = new Date(booking.checkOut + "T00:00:00");
 
-  // reserve all stay dates
-  for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+    // reserve all stay dates
+    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+      property.calendar.push({
+        date: new Date(d),
+        status: "R",
+        source: "booking"
+      });
+    }
+
+    // 🔥 ADD TURNOVER DAY
     property.calendar.push({
-      date: new Date(d),
-      status: "R",
+      date: new Date(end),
+      status: "H",
       source: "booking"
     });
+
+    await property.save();
+    booking.status = "confirmed";
   }
-
-  // 🔥 ADD TURNOVER DAY
-  property.calendar.push({
-    date: new Date(end),
-    status: "H",
-    source: "booking"
-  });
-
-  await property.save();
-  booking.status = "confirmed";
-}
 
 
 
@@ -244,7 +244,7 @@ if (status === "confirmed") {
     message: `Booking ${status}`,
     booking,
   });
-  
+
 };
 
 // ----------------------------------------------------------
@@ -299,8 +299,8 @@ export const getDashboardStats = async (req, res) => {
     ]);
 
     const months = [
-      "Jan","Feb","Mar","Apr","May","Jun",
-      "Jul","Aug","Sep","Oct","Nov","Dec"
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
 
     const formatted = monthlyBookings.map((item) => ({
@@ -319,5 +319,39 @@ export const getDashboardStats = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Dashboard error" });
+  }
+};
+
+// Delete All Booking 
+
+export const deleteBooking = async (req, res) => {
+  try {
+
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    const listing = await Listing.findById(booking.property);
+
+    const start = new Date(booking.checkIn);
+    const end = new Date(booking.checkOut);
+
+    // remove blocked dates
+    listing.calendar = listing.calendar.filter((c) => {
+      const d = new Date(c.date);
+      return !(d >= start && d < end && c.status === "R");
+    });
+
+    await listing.save();
+
+    await Booking.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Booking deleted and dates unblocked" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Delete failed" });
   }
 };
