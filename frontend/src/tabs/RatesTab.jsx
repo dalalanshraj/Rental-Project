@@ -52,25 +52,45 @@ export default function RatesTab({ listingId, goNextTab }) {
   /* ===============================
      ADD RATE
   ================================ */
-  const addRate = async () => {
-    if (!form.season || !form.nightly) {
-      showModal("Season & nightly price required");
-      return;
-    }
+ const addRate = async () => {
+  if (!form.season || !form.nightly || !form.from || !form.to) {
+    showModal("All fields required");
+    return;
+  }
 
-    try {
-      const res = await api.put(
-        `/listings/${listingId}/rates`,
-        { rate: form }
-      );
+  if (new Date(form.from) > new Date(form.to)) {
+    showModal("From date must be before To date");
+    return;
+  }
 
-      setRates(res.data.rates);
-      setForm(emptyRate);
-      goNextTab && goNextTab();
-    } catch {
-      showModal("Failed to add rate");
-    }
-  };
+  if (!form.minNights || Number(form.minNights) < 1) {
+    showModal("Minimum nights must be at least 1");
+    return;
+  }
+
+  try {
+    const res = await api.put(
+      `/listings/${listingId}/rates`,
+      {
+        rate: {
+          ...form,
+          nightly: Number(form.nightly),
+          weekly: Number(form.weekly),
+          monthly: Number(form.monthly),
+          minNights: Number(form.minNights),
+          from: new Date(form.from),
+          to: new Date(form.to),
+        },
+      }
+    );
+
+    setRates(res.data.rates);
+    setForm(emptyRate);
+    goNextTab && goNextTab();
+  } catch {
+    showModal("Failed to add rate");
+  }
+};
 
   /* ===============================
      DELETE RATE

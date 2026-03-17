@@ -1,4 +1,5 @@
 import express from "express";
+import Listing from "../models/Listing.js";
 import {
   createListing,
   getAllListings,
@@ -23,6 +24,7 @@ import {
   deleteExtraFee,
   toggleListingStatus,
   getPublishedListings,
+  getAllReviews,
   deletePhoto
   
 
@@ -44,12 +46,22 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 router.get("/published", getPublishedListings);
+router.get("/reviews", getAllReviews); 
+router.get("/public", async (req, res) => {
+  try {
+    const listings = await Listing.find().select("_id property.title");
+    res.json(listings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 // TEMP (no auth)
 router.post("/", createListing);
 
 router.get("/", isAuth, isAdmin, getAllListings);
-router.get("/:id", getListingById);
+router.get("/:id", getListingById); 
 router.delete("/:id", deleteListing);
+ 
 
 // tab-wise save
 router.put("/:id/property", updateProperty);
@@ -76,6 +88,7 @@ router.post("/:id/reviews", addReview);
 router.put("/:id/reviews/:reviewId/publish", publishReview);
 router.put("/:id/reviews/:reviewId/reply", replyReview);
 router.delete("/:id/reviews/:reviewId", deleteReview);
+
 
 //! EXTRA FEES
 router.put("/:id/extra-fees", addExtraFee);

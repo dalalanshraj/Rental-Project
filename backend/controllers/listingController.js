@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import Listing from "../models/Listing.js";
-import Deal from "../models/Deal.js"; 
+import Deal from "../models/Deal.js";
 import fs from "fs";
 import path from "path";
 dotenv.config();
@@ -110,7 +110,7 @@ export const deleteListing = async (req, res) => {
 
 
 export const updateDescription = async (req, res) => {
- const listing = await Listing.findById(req.params.id);
+  const listing = await Listing.findById(req.params.id);
 
   listing.description = req.body.description;
 
@@ -301,7 +301,7 @@ export const deletePhoto = async (req, res) => {
     await listing.save();
 
     // remove file from server
-   const filePath = path.join("uploads", filename);
+    const filePath = path.join("uploads", filename);
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -403,6 +403,43 @@ export const deleteReview = async (req, res) => {
   res.json({ success: true });
 };
 
+export const getAllReviews = async (req, res) => {
+  try {
+    const listings = await Listing.find();
+
+    let allReviews = [];
+
+    listings.forEach((listing) => {
+      if (!Array.isArray(listing.reviews)) return;
+
+      listing.reviews.forEach((r) => {
+        if (r && r.published === true) {
+          allReviews.push({
+            _id: r._id,
+            review: r.message,
+            rating: r.rating,
+            user: r.name,
+            date: r.createdAt,
+
+            listingId: listing._id, // ✅ ADD THIS (IMPORTANT)
+
+            property: {
+              title: listing.property?.title,
+              image: listing.photos?.[0],
+            },
+          });
+        }
+      });
+    });
+
+    res.json(allReviews);
+
+  } catch (err) {
+    console.error("❌ REAL ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // ================= ADD EXTRA FEE =================
 export const addExtraFee = async (req, res) => {
   const listing = await Listing.findById(req.params.id);
@@ -439,6 +476,8 @@ export const deleteExtraFee = async (req, res) => {
 
   res.json(listing.extraFees);
 };
+
+
 
 // LISTING PUBLISH AND UNPUBLISH 
 export const toggleListingStatus = async (req, res) => {

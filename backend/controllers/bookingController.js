@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import mongoose from "mongoose";
 import Listing from "../models/Listing.js";
+import Deal from "../models/Deal.js";
 import Booking from "../models/Booking.js";
 import Coupon from "../models/Coupon.js";
 import Stripe from "stripe";
@@ -72,6 +73,9 @@ export const previewBooking = async (req, res) => {
   try {
     const { propertyId, checkIn, checkOut } = req.body;
 
+    // =============================
+    // GET PROPERTY
+    // =============================
     const property = await Listing.findById(propertyId);
     if (!property) {
       return res.status(404).json({ error: "Property not found" });
@@ -81,69 +85,132 @@ export const previewBooking = async (req, res) => {
     const end = normalizeNoonDate(checkOut);
 
     if (!start || !end) {
-      return res.status(400).json({ error: "Invalid check-in or check-out date" });
+      return res.status(400).json({ error: "Invalid dates" });
     }
 
     const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
     if (nights <= 0) {
       return res.status(400).json({ error: "Invalid date range" });
     }
+    // =============================
+// MIN NIGHTS VALIDATION
+// =============================
+const getMinNightsForDate = (rates, checkIn) => {
+  const selected = rates.find((r) => {
+    const from = toValidDate(r.from);
+    const to = toValidDate(r.to);
+    return checkIn >= from && checkIn <= to;
+  });
+
+  return selected?.minNights || 1;
+};
+
+const minNights = getMinNightsForDate(property.rates, start);
+
+if (nights < minNights) {
+  return res.status(400).json({
+    error: `Minimum ${minNights} nights required`,
+  });
+}
+
+    // =============================
+    // GET ACTIVE DEAL
+    // =============================
+    const today = new Date();
+
+    const deal = await Deal.findOne({
+      listingId: property._id,
+      displayFrom: { $lte: today },
+      displayEnd: { $gte: today },
+    });
 
     let subtotal = 0;
     let nightlyBreakdown = [];
 
+    // =============================
+    // LOOP EACH NIGHT
+    // =============================
     for (let i = 0; i < nights; i++) {
       const currentDate = new Date(start);
       currentDate.setDate(start.getDate() + i);
 
+      let basePrice = 0;
+      let source = "fallback";
+
+      // -----------------------------
+      // 1️⃣ Calendar price
+      // -----------------------------
       const calendarDay = property.calendar?.find(
         (d) => dateOnly(d.date) === dateOnly(currentDate)
       );
 
       if (calendarDay?.price) {
-        subtotal += calendarDay.price;
-        nightlyBreakdown.push({
-          date: currentDate,
-          price: calendarDay.price,
-          source: "calendar",
+        basePrice = calendarDay.price;
+        source = "calendar";
+      } else {
+        // -----------------------------
+        // 2️⃣ Seasonal rate
+        // -----------------------------
+        const rate = property.rates.find((r) => {
+          const rateStart = toValidDate(r.from);
+          const rateEnd = toValidDate(r.to);
+          if (!rateStart || !rateEnd) return false;
+
+          return currentDate >= rateStart && currentDate <= rateEnd;
         });
-        continue;
+
+        if (rate?.nightly) {
+          basePrice = rate.nightly;
+          source = "season";
+        } else {
+          // -----------------------------
+          // 3️⃣ Fallback price
+          // -----------------------------
+          basePrice = property.basePrice || 150;
+          source = "fallback";
+        }
       }
 
-      const rate = property.rates.find((r) => {
-        const rateStart = toValidDate(r.from);
-        const rateEnd = toValidDate(r.to);
-        if (!rateStart || !rateEnd) return false;
+      // -----------------------------
+      // 4️⃣ APPLY DEAL
+      // -----------------------------
+      const finalPrice = deal ? deal.discountedRate : basePrice;
 
-        return currentDate >= rateStart && currentDate <= rateEnd;
-      });
+      subtotal += finalPrice;
 
-      if (rate?.nightly) {
-        subtotal += rate.nightly;
-        nightlyBreakdown.push({
-          date: currentDate,
-          price: rate.nightly,
-          source: "season",
-        });
-        continue;
-      }
-
-      const fallback = property.basePrice || 150;
-      subtotal += fallback;
       nightlyBreakdown.push({
         date: currentDate,
-        price: fallback,
-        source: "fallback",
+        price: finalPrice,
+        originalPrice: basePrice,
+        source: deal ? "deal" : source,
       });
     }
 
+    // =============================
+    // FEES
+    // =============================
     const cleaningFee = 150;
     const serviceFee = Math.round(subtotal * 0.05);
     const taxes = Math.round(subtotal * 0.12);
     const warranty = 79;
 
-    const total = subtotal + cleaningFee + serviceFee + taxes + warranty;
+    const total =
+      subtotal + cleaningFee + serviceFee + taxes + warranty;
 
+    // =============================
+    // SAVINGS CALCULATION
+    // =============================
+    let savings = 0;
+
+    if (deal) {
+      savings = nightlyBreakdown.reduce((acc, day) => {
+        return acc + (day.originalPrice - day.price);
+      }, 0);
+    }
+
+    // =============================
+    // RESPONSE
+    // =============================
     res.json({
       nights,
       subtotal,
@@ -153,7 +220,10 @@ export const previewBooking = async (req, res) => {
       warranty,
       total,
       nightlyBreakdown,
+      savings,
+      dealApplied: !!deal,
     });
+
   } catch (error) {
     console.error("Preview Booking Error:", error);
     res.status(500).json({ error: "Server error" });
@@ -191,6 +261,27 @@ export const createBooking = async (req, res) => {
     if (!start || !end || start >= end) {
       return res.status(400).json({ error: "Invalid booking dates" });
     }
+    // =============================
+// MIN NIGHTS VALIDATION
+// =============================
+const getMinNightsForDate = (rates, checkIn) => {
+  const selected = rates.find((r) => {
+    const from = toValidDate(r.from);
+    const to = toValidDate(r.to);
+    return checkIn >= from && checkIn <= to;
+  });
+
+  return selected?.minNights || 1;
+};
+
+const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+const minNights = getMinNightsForDate(listing.rates, start);
+
+if (nights < minNights) {
+  return res.status(400).json({
+    error: `Minimum ${minNights} nights required`,
+  });
+}
 
     const booking = new Booking({
       property: propertyId,
@@ -229,13 +320,13 @@ export const createBooking = async (req, res) => {
 
     listing.calendar = normalizeCalendar(listing.calendar);
     console.log(
-  "CALENDAR BEFORE SAVE:",
-  listing.calendar.map((c) => ({
-    date: c.date,
-    status: c.status,
-    source: c.source,
-  }))
-);
+      "CALENDAR BEFORE SAVE:",
+      listing.calendar.map((c) => ({
+        date: c.date,
+        status: c.status,
+        source: c.source,
+      }))
+    );
     await listing.save();
 
     res.json({

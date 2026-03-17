@@ -46,27 +46,59 @@ const PropertyDetail = () => {
 
   // ================= FETCH CALENDAR =================
   useEffect(() => {
-  api
-    .get(`/listings/${id}/calendar`)
-    .then((res) => {
-      const calendar = Array.isArray(res.data) ? res.data : [];
+    api
+      .get(`/listings/${id}/calendar`)
+      .then((res) => {
+        const calendar = Array.isArray(res.data) ? res.data : [];
 
-      setCalendarData(calendar);
+        setCalendarData(calendar);
 
-      const blocked = calendar
-        .filter((d) => d.status === "R")
-        .map((d) => new Date(d.date));
+        const blocked = calendar
+          .filter((d) => d.status === "R")
+          .map((d) => new Date(d.date));
 
-      setBlockedDates(blocked);
+        setBlockedDates(blocked);
 
-      console.log("PROPERTY DETAIL CALENDAR:", calendar);
-    })
-    .catch((err) => {
-      console.log("Server error", err);
-      setCalendarData([]);
-      setBlockedDates([]);
-    });
-}, [id]);
+        console.log("PROPERTY DETAIL CALENDAR:", calendar);
+      })
+      .catch((err) => {
+        console.log("Server error", err);
+        setCalendarData([]);
+        setBlockedDates([]);
+      });
+  }, [id]);
+
+  const getMinNightsForDate = (date) => {
+  if (!listing?.rates || !date) return 1;
+
+  const selected = listing.rates.find((r) => {
+    const from = new Date(r.from);
+    const to = new Date(r.to);
+
+    from.setHours(0, 0, 0, 0);
+    to.setHours(23, 59, 59, 999);
+
+    return date >= from && date <= to;
+  });
+
+  return selected?.minNights || 1;
+};
+
+// 🔹 useEffect
+useEffect(() => {
+  if (checkIn && checkOut && listing) {
+    const minNights = getMinNightsForDate(checkIn);
+
+    const diff =
+      (checkOut - checkIn) / (1000 * 60 * 60 * 24);
+
+    if (diff < minNights) {
+      const newDate = new Date(checkIn);
+      newDate.setDate(newDate.getDate() + minNights);
+      setCheckOut(newDate);
+    }
+  }
+}, [checkIn, checkOut, listing]);
 
   if (loading) return <p className="p-10">Loading...</p>;
   if (!listing) return <p className="p-10">Property not found</p>;
@@ -95,14 +127,19 @@ const PropertyDetail = () => {
     `https://www.google.com/maps?q=${lat},${lng}&z=14&output=embed`;
 
   const formatDate = (date) => {
-  if (!date) return "";
+    if (!date) return "";
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
 
-  return `${year}-${month}-${day}`;
-};
+    return `${year}-${month}-${day}`;
+  };
+
+  
+
+// ================= MIN NIGHT AUTO FIX =================
+// 🔹 single function
 
   return (
     <>
@@ -174,7 +211,7 @@ const PropertyDetail = () => {
               </div>
             );
           })}
-           {/* Activities */}
+          {/* Activities */}
           <h2 className="text-2xl font-semibold mt-8 mb-4">Activities</h2>
           {activitiesData.map((section) => {
             const selected = section.options.filter(
@@ -227,7 +264,7 @@ const PropertyDetail = () => {
           )}
 
           {/* CALENDAR */}
-         <ProCalendar calendar={calendarData} />  
+          <ProCalendar calendar={calendarData} />
 
           {/* REVIEWS */}
           {publishedReviews.length > 0 && (
@@ -289,14 +326,29 @@ const PropertyDetail = () => {
               className="border p-3 rounded w-full"
             />
 
-            <DatePicker
-              selected={checkOut}
-              onChange={(date) => setCheckOut(date)}
-              excludeDates={blockedDates}
-              placeholderText="Check-out"
-              minDate={checkIn || new Date()}
-              className="border p-3 rounded w-full"
-            />
+           <DatePicker
+  selected={checkOut}
+  onChange={(date) => setCheckOut(date)}
+  excludeDates={blockedDates}
+  placeholderText="Check-out"
+  minDate={
+    checkIn
+      ? (() => {
+          const d = new Date(checkIn);
+
+          // ✅ IMPORTANT FIX
+          d.setHours(12, 0, 0, 0);
+
+          d.setDate(
+            d.getDate() + getMinNightsForDate(checkIn)
+          );
+
+          return d;
+        })()
+      : new Date()
+  }
+  className="border p-3 rounded w-full"
+/>
           </div>
 
           <button
@@ -317,25 +369,25 @@ const PropertyDetail = () => {
             Send Inquiry
           </button>
           {openInquiry && (
-  <InquiryModal
-    propertyId={id}
-    onClose={() => setOpenInquiry(false)}
-  />
-  
-)}
+            <InquiryModal
+              propertyId={id}
+              onClose={() => setOpenInquiry(false)}
+            />
+
+          )}
         </div>
 
       </div>
 
       {/* BOOKING MODAL */}
       {openBooking && (
-  <BookingPreviewModal
-    propertyId={id}
-    checkIn={formatDate(checkIn)}
-    checkOut={formatDate(checkOut)}
-    onClose={() => setOpenBooking(false)}
-  />
-)}
+        <BookingPreviewModal
+          propertyId={id}
+          checkIn={formatDate(checkIn)}
+          checkOut={formatDate(checkOut)}
+          onClose={() => setOpenBooking(false)}
+        />
+      )}
     </>
   );
 };

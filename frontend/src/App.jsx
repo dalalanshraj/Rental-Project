@@ -24,6 +24,7 @@ import AddListing from "./admin/pages/AddListing";
 import Bookings from "./admin/pages/Bookings";
 import Users from "./admin/pages/Users";
 import SpecialsDeals from "./pages/Specials";
+import Reviews from "./pages/Reviews";
 
 function App() {
   const location = useLocation();
@@ -44,6 +45,7 @@ function App() {
         <Route path="/BookingPage" element={<BookingPage />} />
         <Route path="/:id" element={<PropertyDetail />} />
         <Route path="/specials" element={<SpecialsDeals/>} />
+        <Route path="/reviews" element={< Reviews />} />
         <Route path="/sea-dunes-beach-front" element={<SeaDunesBeachFront />} />
         
           

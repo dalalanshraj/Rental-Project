@@ -81,4 +81,4 @@ const price = dealPrice || originalPrice || "Call for price";
   );
 };
 
-export default PropertyCard;  
+export default PropertyCard;

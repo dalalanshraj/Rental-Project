@@ -8,7 +8,9 @@ const toValidDate = (value) => {
 const dateOnly = (value) => {
   const d = new Date(value);
   if (isNaN(d.getTime())) return null;
-  return d.toISOString().slice(0, 10);
+
+  // ✅ local date (NO timezone shift)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
 const normalizeCalendar = (calendar = []) => {
@@ -160,20 +162,23 @@ export const blockDates = async (req, res) => {
 
     listing.calendar = normalizeCalendar(listing.calendar);
 
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const current = new Date(d);
+   for (let i = 0; i <= (end - start) / (1000 * 60 * 60 * 24); i++) {
+  const current = new Date(start);
+  current.setDate(start.getDate() + i);
       const key = dateOnly(current);
       if (!key) continue;
 
       const exists = listing.calendar.some((c) => dateOnly(c.date) === key);
 
-      if (!exists) {
-        listing.calendar.push({
-          date: current,
-          status,
-          source,
-        });
-      }
+      listing.calendar = listing.calendar.filter(
+  (c) => dateOnly(c.date) !== key
+);
+
+listing.calendar.push({
+  date: current,
+  status,
+  source,
+});
     }
 
     listing.calendar = normalizeCalendar(listing.calendar);
