@@ -24,6 +24,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import listingRoutes from "./routes/listingRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
 import calendarRoutes from "./routes/listingCalendarRoutes.js";
+import dealRoutes from    "./routes/dealRoutes.js"
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -143,6 +144,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/listings", calendarRoutes);
+app.use("/api/deals" , dealRoutes);
 app.use("/api/inquiries" , inquiryRoutes);
 app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
 

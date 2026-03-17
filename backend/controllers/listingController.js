@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import Listing from "../models/Listing.js";
+import Deal from "../models/Deal.js"; 
 import fs from "fs";
 import path from "path";
 dotenv.config();
@@ -466,15 +467,32 @@ export const toggleListingStatus = async (req, res) => {
 
 export const getPublishedListings = async (req, res) => {
   try {
+
     const listings = await Listing.find({ status: "published" });
 
-    // console.log("PUBLISHED LISTINGS:", listings.length);
+    const today = new Date();
 
-    res.status(200).json(listings);
-  } catch (error) {
-    console.error("ERROR in getPublishedListings:", error);
-    res.status(500).json({
-      error: error.message || "Failed to fetch listing",
+    const deals = await Deal.find({
+      displayFrom: { $lte: today },
+      displayEnd: { $gte: today }
     });
+
+    const result = listings.map(l => {
+
+      const deal = deals.find(
+        d => d.listingId.toString() === l._id.toString()
+      );
+
+      return {
+        ...l._doc,
+        deal: deal || null
+      };
+
+    });
+
+    res.json(result);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

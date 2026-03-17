@@ -13,6 +13,7 @@ import PropertyDetail from "./pages/PropertyDetails";
 import BookingPage from "./pages/BookingPage";
 import SeaDunesBeachFront from "./pages/PropertiesListing/SeaDunes";
 
+
 // ADMIN
 import AdminRoute from "./admin/AdminRoute";
 import AdminLayout from "./admin/AdminLayout";
@@ -22,6 +23,7 @@ import Listings from "./admin/pages/Listings";
 import AddListing from "./admin/pages/AddListing";
 import Bookings from "./admin/pages/Bookings";
 import Users from "./admin/pages/Users";
+import SpecialsDeals from "./pages/Specials";
 
 function App() {
   const location = useLocation();
@@ -41,7 +43,10 @@ function App() {
         <Route path="/results" element={<Results />} />
         <Route path="/BookingPage" element={<BookingPage />} />
         <Route path="/:id" element={<PropertyDetail />} />
-          <Route path="/sea-dunes-beach-front" element={<SeaDunesBeachFront />} />
+        <Route path="/specials" element={<SpecialsDeals/>} />
+        <Route path="/sea-dunes-beach-front" element={<SeaDunesBeachFront />} />
+        
+          
 
         {/* ADMIN LOGIN */}
         <Route path="/admin/login" element={<Login />} />

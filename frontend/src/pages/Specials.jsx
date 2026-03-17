@@ -1,19 +1,24 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/axios.js";
-import PropertyCard from "../components/PropertyCard";
+import PropertyCard from "../components/PropertyCard.jsx";
 
-const Properties = () => {
+const SpecialsDeals = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .get("/listings/published")
-      .then((res) => {
-        setListings(res.data);
+    const fetchDeals = async () => {
+      try {
+        const res = await api.get("/deals/active");
+        setListings(res.data || []);
+      } catch (err) {
+        console.error("Deals fetch error:", err);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchDeals();
   }, []);
 
   return (
@@ -26,17 +31,15 @@ const Properties = () => {
             "url(https://www.coastaldreamrentals.com/img/hero-bg-img.jpeg)",
         }}
       >
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/50"></div >
+
         <h1 className="relative text-6xl font-extrabold">
-          Properties
+          Special Deals
         </h1>
       </section>
 
       {/* LISTINGS */}
       <div className="p-10 bg-gray-100 min-h-screen">
-        <h2 className="text-3xl font-bold text-center mb-8">
-          Available Properties
-        </h2>
 
         {loading && (
           <p className="text-center text-gray-500">
@@ -46,12 +49,11 @@ const Properties = () => {
 
         {!loading && listings.length === 0 && (
           <p className="text-center text-red-500">
-            No properties available
+            No deals available
           </p>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
           {listings.map((listing) => (
             <PropertyCard
               key={listing._id}
@@ -59,9 +61,10 @@ const Properties = () => {
             />
           ))}
         </div>
+
       </div>
     </>
   );
 };
 
-export default Properties;
+export default SpecialsDeals;

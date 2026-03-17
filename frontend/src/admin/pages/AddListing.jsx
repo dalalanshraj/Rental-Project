@@ -14,6 +14,7 @@ import Inquiry from "../../tabs/Inquiry";
 // import Sidebar from "../components/Sidebar";
 import Reviews from "../../tabs/Reviews.jsx"
 import CalendarTab from "../../tabs/CalendarTab.jsx";
+import DealsTab from "../../tabs/DealsTab.jsx";
 
 const tabs = [
   "Property",
@@ -26,6 +27,7 @@ const tabs = [
   "Location",
   "Calendar",
   "Reviews",
+  "Deals",
   "Inquiry",
 ];
 export default function AddListing() {
@@ -157,6 +159,16 @@ export default function AddListing() {
                 initialData={listingData?.Reviews}
                 goNextTab={goNextTab} />)}
 
+            {activeTab === "Deals" && (
+              <DealsTab
+                listingId={listingId}
+                setListingId={setListingId}
+                initialData={listingData?.Deals}
+                goNextTab={goNextTab}
+
+              />
+            )}
+
             {activeTab === "Inquiry" && (
               <Inquiry listingId={listingId}
                 setListingId={setListingId}
@@ -167,7 +179,7 @@ export default function AddListing() {
                 listingId={listingId}
                 calendar={listingData?.calendar}
               />
-              
+
             )}
 
           </div>
