@@ -20,7 +20,7 @@ const normalizeCalendar = (calendar = []) => {
     .map((item) => {
       const d = toValidDate(item?.date);
       if (!d) return null;
-
+      d.setHours(12, 0, 0, 0);
       return {
         date: d,
         status: ["A", "R", "H"].includes(item?.status) ? item.status : "A",
@@ -162,23 +162,23 @@ export const blockDates = async (req, res) => {
 
     listing.calendar = normalizeCalendar(listing.calendar);
 
-   for (let i = 0; i <= (end - start) / (1000 * 60 * 60 * 24); i++) {
-  const current = new Date(start);
-  current.setDate(start.getDate() + i);
+    for (let i = 0; i <= (end - start) / (1000 * 60 * 60 * 24); i++) {
+      const current = new Date(start);
+      current.setDate(start.getDate() + i);
       const key = dateOnly(current);
       if (!key) continue;
 
       const exists = listing.calendar.some((c) => dateOnly(c.date) === key);
 
       listing.calendar = listing.calendar.filter(
-  (c) => dateOnly(c.date) !== key
-);
+        (c) => dateOnly(c.date) !== key
+      );
 
-listing.calendar.push({
-  date: current,
-  status,
-  source,
-});
+      listing.calendar.push({
+        date: current,
+        status,
+        source,
+      });
     }
 
     listing.calendar = normalizeCalendar(listing.calendar);
@@ -258,21 +258,20 @@ export const cleanDuplicateCalendar = async (req, res) => {
 
     const map = new Map();
 
-    for (const item of normalizeCalendar(listing.calendar)) {
-      const key = dateOnly(item.date);
-      if (!key) continue;
+for (const item of listing.calendar) {
+  const key = toDateKey(item.date);
 
-      if (!map.has(key)) {
-        map.set(key, item);
-      } else {
-        const oldItem = map.get(key);
-        if (rank(item) >= rank(oldItem)) {
-          map.set(key, item);
-        }
-      }
+  if (!map.has(key)) {
+    map.set(key, item);
+  } else {
+    // booking ko priority do
+    if (item.source === "booking") {
+      map.set(key, item);
     }
+  }
+}
 
-    listing.calendar = Array.from(map.values());
+listing.calendar = Array.from(map.values());
     await listing.save();
 
     res.json({
@@ -292,7 +291,7 @@ export const clearCalendar = async (req, res) => {
     if (!listing) {
       return res.status(404).json({ error: "Listing not found" });
     }
-      listing.calendar = [];
+    listing.calendar = [];
     await listing.save();
 
     res.json({

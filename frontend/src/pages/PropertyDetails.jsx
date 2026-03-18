@@ -32,6 +32,7 @@ const PropertyDetail = () => {
   const [blockedDates, setBlockedDates] = useState([]);
   const [openInquiry, setOpenInquiry] = useState(false);
   const [calendarData, setCalendarData] = useState([]);
+  
 
   // ================= FETCH LISTING =================
   useEffect(() => {
@@ -45,29 +46,19 @@ const PropertyDetail = () => {
   }, [id]);
 
   // ================= FETCH CALENDAR =================
-  useEffect(() => {
-    api
-      .get(`/listings/${id}/calendar`)
-      .then((res) => {
-        const calendar = Array.isArray(res.data) ? res.data : [];
-
-        setCalendarData(calendar);
-
-        const blocked = calendar
-          .filter((d) => d.status === "R")
-          .map((d) => new Date(d.date));
-
-        setBlockedDates(blocked);
-
-        console.log("PROPERTY DETAIL CALENDAR:", calendar);
-      })
-      .catch((err) => {
-        console.log("Server error", err);
-        setCalendarData([]);
-        setBlockedDates([]);
+ useEffect(() => {
+  api.get(`/listings/${id}/calendar`).then((res) => {
+    const blocked = res.data
+      .filter((d) => d.status === "R" || d.status === "H")
+      .map((d) => {
+        const dt = new Date(d.date);
+        dt.setHours(0, 0, 0, 0);
+        return dt;
       });
-  }, [id]);
 
+    setBlockedDates(blocked);
+  });
+}, [id]);
   const getMinNightsForDate = (date) => {
   if (!listing?.rates || !date) return 1;
 
@@ -264,7 +255,7 @@ useEffect(() => {
           )}
 
           {/* CALENDAR */}
-          <ProCalendar calendar={calendarData} />
+          <ProCalendar listingId={id} />
 
           {/* REVIEWS */}
           {publishedReviews.length > 0 && (

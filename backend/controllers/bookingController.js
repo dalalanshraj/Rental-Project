@@ -43,7 +43,8 @@ const normalizeNoonDate = (value) => {
 const dateOnly = (value) => {
   const d = new Date(value);
   if (isNaN(d.getTime())) return null;
-  return d.toISOString().slice(0, 10);
+
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
 const normalizeCalendar = (calendar = []) => {
@@ -53,6 +54,7 @@ const normalizeCalendar = (calendar = []) => {
     .map((item) => {
       const d = toValidDate(item?.date);
       if (!d) return null;
+      d.setHours(12, 0, 0, 0); // 🔥 MUST ADD
 
       return {
         date: d,
@@ -225,7 +227,7 @@ if (nights < minNights) {
     });
 
   } catch (error) {
-    console.error("Preview Booking Error:", error);
+    // console.error("Preview Booking Error:", error);
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -234,7 +236,7 @@ if (nights < minNights) {
 // CREATE BOOKING (Stripe Verification)
 // ----------------------------------------------------------
 export const createBooking = async (req, res) => {
-  console.log("CREATE BOOKING BODY:", req.body);
+  // console.log("CREATE BOOKING BODY:", req.body);
   try {
     const {
       propertyId,
@@ -303,30 +305,27 @@ if (nights < minNights) {
 
     listing.calendar = normalizeCalendar(listing.calendar);
 
-    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-      const current = new Date(d);
-      const exists = listing.calendar.find(
-        (c) => dateOnly(c.date) === dateOnly(current)
-      );
+   for (let i = 0; i < (end - start) / (1000 * 60 * 60 * 24); i++) {
+  const current = new Date(start);
+  current.setDate(start.getDate() + i);
 
-      if (!exists) {
-        listing.calendar.push({
-          date: current,
-          status: "R",
-          source: "booking",
-        });
-      }
-    }
+  current.setHours(12, 0, 0, 0); // 🔥 IMPORTANT
+
+  const exists = listing.calendar.find(
+    (c) => dateOnly(c.date) === dateOnly(current)
+  );
+
+  if (!exists) {
+    listing.calendar.push({
+      date: current,
+      status: "R",
+      source: "booking",
+    });
+  }
+}
 
     listing.calendar = normalizeCalendar(listing.calendar);
-    console.log(
-      "CALENDAR BEFORE SAVE:",
-      listing.calendar.map((c) => ({
-        date: c.date,
-        status: c.status,
-        source: c.source,
-      }))
-    );
+  //  console.log("FINAL CALENDAR SAVE:", listing.calendar);
     await listing.save();
 
     res.json({
@@ -334,7 +333,7 @@ if (nights < minNights) {
       bookingId: booking._id,
     });
   } catch (err) {
-    console.error("Create booking error:", err);
+    // console.error("Create booking error:", err);
     res.status(500).json({ error: "Booking failed" });
   }
 };
@@ -416,7 +415,7 @@ export const updateBookingStatus = async (req, res) => {
       booking,
     });
   } catch (err) {
-    console.error("Update booking status error:", err);
+    // console.error("Update booking status error:", err);
     res.status(500).json({ error: "Failed to update booking status" });
   }
 };
@@ -487,7 +486,7 @@ export const getDashboardStats = async (req, res) => {
       monthlyBookings: formatted,
     });
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     res.status(500).json({ error: "Dashboard error" });
   }
 };
@@ -509,10 +508,11 @@ export const deleteBooking = async (req, res) => {
     }
 
     const toDateKey = (value) => {
-      const d = new Date(value);
-      if (isNaN(d.getTime())) return null;
-      return d.toISOString().slice(0, 10);
-    };
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return null;
+
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
     const start = new Date(booking.checkIn);
     const end = new Date(booking.checkOut);
@@ -531,36 +531,35 @@ export const deleteBooking = async (req, res) => {
     // checkout / turnover day
     const turnoverKey = toDateKey(end);
 
-    console.log("DELETE BOOKING ID:", booking._id);
-    console.log("STAY DATE KEYS:", [...stayDateKeys]);
-    console.log("TURNOVER KEY:", turnoverKey);
-    console.log("CALENDAR BEFORE DELETE:", listing.calendar);
+    // console.log("DELETE BOOKING ID:", booking._id);
+    // console.log("STAY DATE KEYS:", [...stayDateKeys]);
+    // console.log("TURNOVER KEY:", turnoverKey);
+    // console.log("CALENDAR BEFORE DELETE:", listing.calendar);
 
     listing.calendar = (listing.calendar || []).filter((item) => {
       const key = toDateKey(item.date);
       if (!key) return false;
 
       // remove all booking-created reserved dates
-      if (item.source === "booking" && item.status === "R" && stayDateKeys.has(key)) {
-        return false;
-      }
-
+     if (item.status === "R" && stayDateKeys.has(key)) {
+  return false;
+}
       // remove booking-created turnover day
-      if (item.source === "booking" && item.status === "H" && key === turnoverKey) {
-        return false;
-      }
+     if (item.status === "H" && key === turnoverKey) {
+  return false;
+}
 
       return true;
     });
 
-    console.log("CALENDAR AFTER DELETE:", listing.calendar);
+    // console.log("CALENDAR AFTER DELETE:", listing.calendar);
 
     await listing.save();
     await Booking.findByIdAndDelete(req.params.id);
 
     res.json({ message: "Booking deleted and calendar updated" });
   } catch (err) {
-    console.error("Delete booking error:", err);
+    // console.error("Delete booking error:", err);
     res.status(500).json({ error: "Delete failed" });
   }
 };

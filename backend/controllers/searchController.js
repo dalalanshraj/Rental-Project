@@ -37,7 +37,7 @@ export const searchController = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Search error:", err);
+    // console.error("Search error:", err);
     res.status(500).json({ error: "Search failed" });
   }
 };

@@ -3,8 +3,9 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import api from "../api/axios.js";
 
+
 // ==============================
-// DATE HELPERS (VERY IMPORTANT)
+// DATE HELPERS
 // ==============================
 const normalizeDate = (date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -14,11 +15,17 @@ const formatLocalDate = (date) =>
     date.getDate()
   ).padStart(2, "0")}`;
 
+const toLocal = (val) => {
+  const d = new Date(val);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
+
 export default function CalendarTab({ listingId }) {
   const [calendar, setCalendar] = useState([]);
+  const [calendarMap, setCalendarMap] = useState({});
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [status, setStatus] = useState("H"); // H = Hold, R = Reserved
+  const [status, setStatus] = useState("H");
   const [loading, setLoading] = useState(false);
 
   // ==============================
@@ -27,26 +34,42 @@ export default function CalendarTab({ listingId }) {
   useEffect(() => {
     if (!listingId) return;
 
-    api
-      .get(`/listings/${listingId}/calendar`)
-      .then((res) => setCalendar(res.data))
-      .catch(console.error);
+    const fetchCalendar = async () => {
+      try {
+        const res = await api.get(`/listings/${listingId}/calendar`);
+        const data = Array.isArray(res.data) ? res.data : [];
+
+        setCalendar(data);
+
+        // 🔥 FAST MAP
+        const map = {};
+        data.forEach((c) => {
+          map[formatLocalDate(toLocal(c.date))] = c;
+        });
+
+        setCalendarMap(map);
+      } catch (err) {
+        console.error(err);
+        setCalendar([]);
+        setCalendarMap({});
+      }
+    };
+
+    fetchCalendar();
   }, [listingId]);
 
   // ==============================
-  // HANDLE DATE CLICK (SLOW + SAFE)
+  // HANDLE DATE CLICK
   // ==============================
   const handleDayClick = (date) => {
     const clicked = normalizeDate(date);
 
-    // first click
     if (!startDate) {
       setStartDate(clicked);
-      setEndDate(null);
+      setEndDate(clicked);
       return;
     }
 
-    // second click
     if (!endDate) {
       if (clicked < startDate) {
         setStartDate(clicked);
@@ -56,13 +79,29 @@ export default function CalendarTab({ listingId }) {
       return;
     }
 
-    // reset selection
     setStartDate(clicked);
-    setEndDate(null);
+    setEndDate(clicked);
   };
 
   // ==============================
-  // BLOCK SELECTED RANGE
+  // REFRESH CALENDAR
+  // ==============================
+  const refreshCalendar = async () => {
+    const res = await api.get(`/listings/${listingId}/calendar`);
+    const data = Array.isArray(res.data) ? res.data : [];
+
+    setCalendar(data);
+
+    const map = {};
+    data.forEach((c) => {
+      map[formatLocalDate(toLocal(c.date))] = c;
+    });
+
+    setCalendarMap(map);
+  };
+
+  // ==============================
+  // BLOCK
   // ==============================
   const blockDates = async () => {
     if (!startDate || !endDate) {
@@ -73,96 +112,73 @@ export default function CalendarTab({ listingId }) {
     setLoading(true);
 
     try {
-      await api.post(
-        `/listings/${listingId}/calendar/block`,
-        {
-          startDate: formatLocalDate(startDate),
-          endDate: formatLocalDate(endDate),
-          status,
-        },
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      const res = await api.get(
-        `/listings/${listingId}/calendar`
-      );
-      setCalendar(res.data);
-
+   await api.put(
+  `/listings/${listingId}/calendar/block`,
+  
+  {
+    startDate: formatLocalDate(startDate),
+    endDate: formatLocalDate(endDate),
+    status,
+  }
+);
+      await refreshCalendar();
       setStartDate(null);
       setEndDate(null);
-    } catch (err) {
+    } catch {
       alert("Failed to block dates");
+      console.log("TOKEN:", localStorage.getItem("token"));
     } finally {
       setLoading(false);
     }
   };
 
   // ==============================
-  // UNBLOCK SELECTED RANGE
+  // UNBLOCK
   // ==============================
   const unblockDates = async () => {
-    if (!startDate || !endDate) {
-      alert("Select start & end date");
-      return;
-    }
+  if (!startDate || !endDate) {
+    alert("Select start & end date");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      await api.post(
-        `/listings/${listingId}/calendar/unblock`,
-        {
-          startDate: formatLocalDate(startDate),
-          endDate: formatLocalDate(endDate),
-        },
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+  try {
+    await api.put(
+      `/listings/${listingId}/calendar/unblock`, // ✅ FIXED
+      {
+        startDate: formatLocalDate(startDate),
+        endDate: formatLocalDate(endDate),
+      }
+    );
 
-      const res = await api.get(
-        `/listings/${listingId}/calendar`
-      );
-      setCalendar(res.data);
-
-      setStartDate(null);
-      setEndDate(null);
-    } catch (err) {
-      alert("Failed to unblock dates");
-    } finally {
-      setLoading(false);
-    }
-  };
+    await refreshCalendar();
+    setStartDate(null);
+    setEndDate(null);
+  } catch {
+    alert("Failed to unblock dates");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ==============================
-  // TILE STYLING (BUG FREE)
+  // TILE STYLE
   // ==============================
   const tileClassName = ({ date }) => {
     const d = normalizeDate(date);
-    const dayStr = formatLocalDate(d);
+    const key = formatLocalDate(d);
 
-    // Selected range
     if (startDate && endDate && d >= startDate && d <= endDate) {
-      return "bg-blue-300 text-black";
+      return "bg-blue-400 text-white rounded-lg";
     }
 
-    const found = calendar.find(
-      (c) =>
-        formatLocalDate(new Date(c.date)) === dayStr
-    );
+    const found = calendarMap[key];
 
     if (!found) return "";
 
-    if (found.status === "R") return "bg-red-500 text-yellow-500";
-    if (found.status === "H") return "bg-yellow-400";
+    if (found.status === "R") return "bg-red-500 text-white rounded-lg";
+    if (found.status === "H") return "bg-yellow-400 text-black rounded-lg";
 
     return "";
   };
@@ -171,59 +187,86 @@ export default function CalendarTab({ listingId }) {
   // UI
   // ==============================
   return (
-    <div className="bg-white p-6 rounded-xl shadow">
+    <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl shadow-xl border border-gray-200">
 
-      <h2 className="text-2xl font-bold mb-4">
-        Availability Calendar
-      </h2>
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">
+          📅 Availability Calendar
+        </h2>
 
-      <Calendar
-        onClickDay={handleDayClick}
-        tileClassName={tileClassName}
-        minDate={new Date()}
-      />
+        <div className="flex gap-3 text-sm">
+          <span className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-green-300 rounded"></div> Available
+          </span>
+          <span className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-red-500 rounded"></div> Reserved
+          </span>
+          <span className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-yellow-400 rounded"></div> Hold
+          </span>
+        </div>
+      </div>
+
+      {/* CALENDAR */}
+      <div className="bg-white rounded-xl p-4 shadow-inner border">
+        <Calendar
+          onClickDay={handleDayClick}
+          tileClassName={tileClassName}
+          minDate={new Date()}
+          className="w-full border-none text-sm"
+        />
+      </div>
 
       {/* CONTROLS */}
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 space-y-5">
 
-        <div className="flex gap-4">
-          <label className="font-medium">Block as:</label>
+        <div className="flex items-center gap-4">
+          <label className="font-semibold text-gray-700">
+            Block as:
+          </label>
 
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="border rounded px-3 py-2 "
+            className="border px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
           >
-            <option value="H">Hold / Maintenance</option>
-            <option value="R">Reserved</option>
+            <option value="H">🟡 Hold / Maintenance</option>
+            <option value="R">🔴 Reserved</option>
           </select>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <button
             onClick={blockDates}
             disabled={loading}
-            className="bg-red-600 text-white px-5 py-2 rounded-lg cursor-pointer"
+            className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-xl font-semibold shadow-md"
           >
-            Block Dates
+            🚫 Block Dates
           </button>
 
           <button
             onClick={unblockDates}
             disabled={loading}
-            className="bg-green-600 text-white px-5 py-2 rounded-lg cursor-pointer"
+            className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-semibold shadow-md"
           >
-            Unblock Dates
+            ✅ Unblock Dates
           </button>
         </div>
 
         {startDate && endDate && (
-          <p className="text-sm text-gray-600">
-            Selected:{" "}
-            <b>{formatLocalDate(startDate)}</b> →{" "}
-            <b>{formatLocalDate(endDate)}</b>
-          </p>
+          <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm">
+            Selected:
+            <span className="font-semibold ml-1">
+              {formatLocalDate(startDate)}
+            </span>
+            {" → "}
+            <span className="font-semibold">
+              {formatLocalDate(endDate)}
+            </span>
+          </div>
         )}
+
       </div>
     </div>
   );

@@ -167,7 +167,7 @@ app.listen(PORT, () =>
   console.log(`🚀 Server running at http://localhost:${PORT}`)
 );
 
-console.log("Listing routes loaded");
+// console.log("Listing routes loaded");
 
 // console.log("Loaded MONGO_URI =", process.env.MONGO_URI);
 // console.log("bookingRoutes loaded");

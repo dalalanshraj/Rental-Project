@@ -22,6 +22,7 @@ import {
    addExtraFee,
   editExtraFee,
   deleteExtraFee,
+  editRate,
   toggleListingStatus,
   getPublishedListings,
   getAllReviews,
@@ -77,6 +78,7 @@ router.delete("/:id/photos/:filename", deletePhoto);
 router.put("/:id/video", updateVideo);
 router.put("/:id/rates", updateRates);
 router.put("/:id/rates/delete", deleteRate);
+router.put("/:id/rates/edit", editRate);
 router.put("/:id/location", updateLocation);
 
 

@@ -27,7 +27,7 @@ export const createInquiry = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Inquiry Error:", err);
+    // console.error("Inquiry Error:", err);
     res.status(500).json({ error: err.message });
   }
 };

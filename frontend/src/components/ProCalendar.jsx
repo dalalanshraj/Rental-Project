@@ -5,7 +5,9 @@ import dayjs from "dayjs";
 export default function ProCalendar({ listingId }) {
   const [calendar, setCalendar] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
+  const [refresh, setRefresh] = useState(false);
 
+  // 🔥 fetch calendar
   useEffect(() => {
     const fetchCalendar = async () => {
       try {
@@ -19,9 +21,13 @@ export default function ProCalendar({ listingId }) {
     };
 
     if (listingId) fetchCalendar();
-  }, [listingId]);
+  }, [listingId, refresh]); // ✅ FIXED
 
-  console.log("listingId frontend:", listingId);
+  // 🔥 expose refresh
+  const triggerRefresh = () => {
+    setRefresh(prev => !prev);
+  };
+
   console.log("calendar state frontend:", calendar);
 
   const start = currentMonth.startOf("month");
@@ -36,33 +42,22 @@ export default function ProCalendar({ listingId }) {
     days.push(dayjs(new Date(currentMonth.year(), currentMonth.month(), d)));
   }
 
+  const formatLocal = (d) => {
+    const date = new Date(d);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  };
+
   const getEntry = (date) => {
     return calendar.find(
-      (c) => dayjs(c.date).format("YYYY-MM-DD") === dayjs(date).format("YYYY-MM-DD")
+      (c) => formatLocal(c.date) === formatLocal(date)
     );
   };
 
   return (
-    
     <div className="bg-white shadow rounded-xl p-6 mt-10">
-       <div className="text-3xl text-red-600 font-bold">
-    TEST CALENDAR
-  </div>
-      <div className="mb-4 text-sm text-red-500">
-        Calendar entries: {calendar.length}
-      </div>
-
-      <div className="flex justify-between items-center mb-4">
-        <button onClick={() => setCurrentMonth(currentMonth.subtract(1, "month"))}>
-          ◀
-        </button>
-
-        <h2 className="text-xl font-bold">{currentMonth.format("MMMM YYYY")}</h2>
-
-        <button onClick={() => setCurrentMonth(currentMonth.add(1, "month"))}>
-          ▶
-        </button>
-      </div>
+      <h2 className="text-xl font-bold mb-4">
+        {currentMonth.format("MMMM YYYY")}
+      </h2>
 
       <div className="grid grid-cols-7 text-center font-semibold mb-2">
         {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
@@ -96,4 +91,4 @@ export default function ProCalendar({ listingId }) {
       </div>
     </div>
   );
-} 
+}

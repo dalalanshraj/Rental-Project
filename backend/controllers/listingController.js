@@ -67,7 +67,7 @@ export const updateProperty = async (req, res) => {
     res.json(listing);
 
   } catch (err) {
-    console.error("PROPERTY UPDATE ERROR FULL:", err);
+    // console.error("PROPERTY UPDATE ERROR FULL:", err);
     res.status(500).json({ error: "Property update failed" });
   }
 };
@@ -219,7 +219,7 @@ export const updateLocation = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("LOCATION ERROR:", error.message);
+    // console.error("LOCATION ERROR:", error.message);
 
     res.status(500).json({
       message: "Location update failed"
@@ -278,7 +278,7 @@ export const updatePhotos = async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     res.status(500).json({ error: "Photo upload failed" });
   }
 };
@@ -313,7 +313,7 @@ export const deletePhoto = async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     res.status(500).json({ error: "Delete failed" });
   }
 };
@@ -338,7 +338,7 @@ export const updateVideo = async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     res.status(500).json({ error: "Failed to update video" });
   }
 };
@@ -435,7 +435,7 @@ export const getAllReviews = async (req, res) => {
     res.json(allReviews);
 
   } catch (err) {
-    console.error("❌ REAL ERROR:", err);
+    // console.error("❌ REAL ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -477,6 +477,22 @@ export const deleteExtraFee = async (req, res) => {
   res.json(listing.extraFees);
 };
 
+export const editRate = async (req, res) => {
+  const { id } = req.params;
+  const { index, rate } = req.body;
+
+  const listing = await Listing.findById(id);
+  if (!listing) {
+    return res.status(404).json({ error: "Listing not found" });
+  }
+
+  listing.rates[index] = rate;
+
+  await listing.save();
+
+  res.json({ rates: listing.rates });
+};
+
 
 
 // LISTING PUBLISH AND UNPUBLISH 
@@ -499,7 +515,7 @@ export const toggleListingStatus = async (req, res) => {
       listingId: listing._id,
     });
   } catch (err) {
-    console.error("Toggle status error:", err);
+    // console.error("Toggle status error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

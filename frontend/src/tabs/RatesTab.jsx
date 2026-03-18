@@ -33,6 +33,7 @@ export default function RatesTab({ listingId, goNextTab }) {
   const [showFeeModal, setShowFeeModal] = useState(false);
   const [editFeeIndex, setEditFeeIndex] = useState(null);
   const { showModal } = useModal();
+  const [editRateIndex, setEditRateIndex] = useState(null);
 
   /* ===============================
      LOAD LISTING DATA
@@ -52,45 +53,68 @@ export default function RatesTab({ listingId, goNextTab }) {
   /* ===============================
      ADD RATE
   ================================ */
- const addRate = async () => {
-  if (!form.season || !form.nightly || !form.from || !form.to) {
-    showModal("All fields required");
-    return;
-  }
+  const addRate = async () => {
+    if (!form.season || !form.nightly || !form.from || !form.to) {
+      showModal("All fields required");
+      return;
+    }
 
-  if (new Date(form.from) > new Date(form.to)) {
-    showModal("From date must be before To date");
-    return;
-  }
+    if (new Date(form.from) > new Date(form.to)) {
+      showModal("From date must be before To date");
+      return;
+    }
 
-  if (!form.minNights || Number(form.minNights) < 1) {
-    showModal("Minimum nights must be at least 1");
-    return;
-  }
+    if (!form.minNights || Number(form.minNights) < 1) {
+      showModal("Minimum nights must be at least 1");
+      return;
+    }
 
-  try {
-    const res = await api.put(
-      `/listings/${listingId}/rates`,
-      {
-        rate: {
-          ...form,
-          nightly: Number(form.nightly),
-          weekly: Number(form.weekly),
-          monthly: Number(form.monthly),
-          minNights: Number(form.minNights),
-          from: new Date(form.from),
-          to: new Date(form.to),
-        },
+    try {
+      let res;
+
+      if (editRateIndex !== null) {
+        // 🔥 EDIT MODE
+        res = await api.put(
+          `/listings/${listingId}/rates/edit`,
+          {
+            index: editRateIndex,
+            rate: {
+              ...form,
+              nightly: Number(form.nightly),
+              weekly: Number(form.weekly),
+              monthly: Number(form.monthly),
+              minNights: Number(form.minNights),
+              from: new Date(form.from),
+              to: new Date(form.to),
+            },
+          }
+        );
+      } else {
+        // ➕ ADD MODE
+        res = await api.put(
+          `/listings/${listingId}/rates`,
+          {
+            rate: {
+              ...form,
+              nightly: Number(form.nightly),
+              weekly: Number(form.weekly),
+              monthly: Number(form.monthly),
+              minNights: Number(form.minNights),
+              from: new Date(form.from),
+              to: new Date(form.to),
+            },
+          }
+        );
       }
-    );
 
-    setRates(res.data.rates);
-    setForm(emptyRate);
-    goNextTab && goNextTab();
-  } catch {
-    showModal("Failed to add rate");
-  }
-};
+      setRates(res.data.rates);
+      setForm(emptyRate);
+      setEditRateIndex(null);
+
+    } catch {
+      showModal("Failed to save rate");
+    }
+  };
 
   /* ===============================
      DELETE RATE
@@ -195,7 +219,7 @@ export default function RatesTab({ listingId, goNextTab }) {
         {rates.map((rate, i) => (
           <div
             key={i}
-            className="grid grid-cols-8 gap-2 border p-2 mt-2 bg-white rounded text-sm"
+            className="grid grid-cols-8 gap-2 border p-2 mt-2 bg-white rounded text-sm items-center"
           >
             <div>{rate.season}</div>
             <div>{rate.from?.slice(0, 10)}</div>
@@ -205,12 +229,28 @@ export default function RatesTab({ listingId, goNextTab }) {
             <div>${rate.monthly}</div>
             <div>{rate.minNights}</div>
 
-            <button
-              onClick={() => deleteRate(i)}
-              className="text-red-600 cursor-pointer"
-            >
-              Delete
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setForm({
+                    ...rate,
+                    from: rate.from?.slice(0, 10),
+                    to: rate.to?.slice(0, 10),
+                  });
+                  setEditRateIndex(i);
+                }}
+                className="text-blue-600 cursor-pointer"
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() => deleteRate(i)}
+                className="text-red-600 cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>

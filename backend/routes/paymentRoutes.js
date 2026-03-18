@@ -22,7 +22,7 @@ router.post("/create", async (req, res) => {
     res.json({ clientSecret: paymentIntent.client_secret });
 
   } catch (err) {
-    console.error("Stripe Error:", err);
+    // console.error("Stripe Error:", err);
     res.status(500).json({ error: err.message });
   }
 });

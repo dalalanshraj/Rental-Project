@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/axios.js";
 import { Link } from "react-router-dom";
 import ReviewModal from "../components/ReviewModal";
 
@@ -9,8 +9,8 @@ export default function Reviews() {
 
   const fetchReviews = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:8000/api/listings/reviews"
+      const res = await api.get(
+        "/listings/reviews"
       );
 
       setReviews(res.data.reviews || res.data || []);
@@ -25,7 +25,23 @@ export default function Reviews() {
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 pt-80">
+    <>
+     {/* HERO */}
+      <section
+        className="relative h-[70vh] bg-cover bg-center flex items-center justify-center text-white"
+        style={{
+          backgroundImage:
+            "url(https://www.coastaldreamrentals.com/img/hero-bg-img.jpeg)",
+        }}
+      >
+        <div className="absolute inset-0 bg-black/50"></div >
+
+        <h1 className="relative text-6xl font-extrabold">
+          All Reviews
+        </h1>
+      </section>
+   
+    <div className="max-w-6xl mx-auto p-6 pt-20">
 
       <h1 className="text-3xl text-center mb-4">Reviews</h1>
 
@@ -45,7 +61,7 @@ export default function Reviews() {
             <img
               src={
                 item.property?.image
-                  ? `http://localhost:8000${item.property.image}`
+                  ? `${import.meta.env.VITE_API_URL}${item.property.image}`
                   : "/no-image.png"
               }
               alt=""
@@ -60,10 +76,10 @@ export default function Reviews() {
 
             <Link
               to={`/listing/${item.listingId}`}
-              className="bg-green-500 text-white px-3 py-1 rounded"
+              className="bg-green-500 text-white px-1 py-1 rounded"
             >
               READ REVIEWS
-            </Link>
+            </Link> 
           </div>
         ))}
       </div>
@@ -72,5 +88,6 @@ export default function Reviews() {
         <ReviewModal onClose={() => setShowModal(false)} />
       )} */}
     </div>
+     </>
   );
 } 

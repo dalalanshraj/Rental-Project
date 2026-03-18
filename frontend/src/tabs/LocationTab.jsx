@@ -10,7 +10,7 @@ const containerStyle = {
 
 export default function LocationTab({ listingId, goNextTab }) {
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "AIzaSyAtaQpu0ULETk1Q0NXWG46iurqt3w3qE-g",
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   });
 
   const [position, setPosition] = useState({
