@@ -75,122 +75,73 @@ export const previewBooking = async (req, res) => {
   try {
     const { propertyId, checkIn, checkOut } = req.body;
 
-    // =============================
-    // GET PROPERTY
-    // =============================
-    const property = await Listing.findById(propertyId);
-    if (!property) {
+    const listing = await Listing.findById(propertyId);
+    if (!listing) {
       return res.status(404).json({ error: "Property not found" });
     }
 
-    const start = normalizeNoonDate(checkIn);
-    const end = normalizeNoonDate(checkOut);
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
 
-    if (!start || !end) {
+    if (start >= end) {
       return res.status(400).json({ error: "Invalid dates" });
     }
 
-    const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    if (nights <= 0) {
-      return res.status(400).json({ error: "Invalid date range" });
-    }
-    // =============================
-// MIN NIGHTS VALIDATION
-// =============================
-const getMinNightsForDate = (rates, checkIn) => {
-  const selected = rates.find((r) => {
-    const from = toValidDate(r.from);
-    const to = toValidDate(r.to);
-    return checkIn >= from && checkIn <= to;
-  });
-
-  return selected?.minNights || 1;
-};
-
-const minNights = getMinNightsForDate(property.rates, start);
-
-if (nights < minNights) {
-  return res.status(400).json({
-    error: `Minimum ${minNights} nights required`,
-  });
-}
-
-    // =============================
-    // GET ACTIVE DEAL
-    // =============================
+    // ============================
+    // DEAL FETCH
+    // ============================
     const today = new Date();
 
     const deal = await Deal.findOne({
-      listingId: property._id,
+      listingId: propertyId,
       displayFrom: { $lte: today },
       displayEnd: { $gte: today },
     });
 
+    // ============================
+    // RATE FINDER
+    // ============================
+    const getRateForDate = (rates, date) => {
+      return rates.find((r) => {
+        const from = new Date(r.from);
+        const to = new Date(r.to);
+        return date >= from && date <= to;
+      });
+    };
+
+    // ============================
+    // PRICE CALCULATION
+    // ============================
     let subtotal = 0;
-    let nightlyBreakdown = [];
+    let nights = 0;
 
-    // =============================
-    // LOOP EACH NIGHT
-    // =============================
-    for (let i = 0; i < nights; i++) {
-      const currentDate = new Date(start);
-      currentDate.setDate(start.getDate() + i);
+    for (
+      let d = new Date(start);
+      d < end;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const current = new Date(d);
 
-      let basePrice = 0;
-      let source = "fallback";
+      const rate = getRateForDate(listing.rates, current);
 
-      // -----------------------------
-      // 1️⃣ Calendar price
-      // -----------------------------
-      const calendarDay = property.calendar?.find(
-        (d) => dateOnly(d.date) === dateOnly(currentDate)
-      );
+      let price = rate?.nightly || 0;
 
-      if (calendarDay?.price) {
-        basePrice = calendarDay.price;
-        source = "calendar";
-      } else {
-        // -----------------------------
-        // 2️⃣ Seasonal rate
-        // -----------------------------
-        const rate = property.rates.find((r) => {
-          const rateStart = toValidDate(r.from);
-          const rateEnd = toValidDate(r.to);
-          if (!rateStart || !rateEnd) return false;
-
-          return currentDate >= rateStart && currentDate <= rateEnd;
-        });
-
-        if (rate?.nightly) {
-          basePrice = rate.nightly;
-          source = "season";
-        } else {
-          // -----------------------------
-          // 3️⃣ Fallback price
-          // -----------------------------
-          basePrice = property.basePrice || 150;
-          source = "fallback";
-        }
+      // ✅ APPLY DEAL
+      if (
+        deal &&
+        current >= new Date(deal.dealStartDate) &&
+        current <= new Date(deal.dealEndDate)
+      ) {
+        price = deal.discountedRate;
       }
 
-      // -----------------------------
-      // 4️⃣ APPLY DEAL
-      // -----------------------------
-      const finalPrice = deal ? deal.discountedRate : basePrice;
-
-      subtotal += finalPrice;
-
-      nightlyBreakdown.push({
-        date: currentDate,
-        price: finalPrice,
-        originalPrice: basePrice,
-        source: deal ? "deal" : source,
-      });
+      subtotal += price;
+      nights++;
     }
 
-    // =============================
-    // FEES
-    // =============================
+    // ============================
+    // EXTRA FEES
+    // ============================
     const cleaningFee = 150;
     const serviceFee = Math.round(subtotal * 0.05);
     const taxes = Math.round(subtotal * 0.12);
@@ -199,20 +150,6 @@ if (nights < minNights) {
     const total =
       subtotal + cleaningFee + serviceFee + taxes + warranty;
 
-    // =============================
-    // SAVINGS CALCULATION
-    // =============================
-    let savings = 0;
-
-    if (deal) {
-      savings = nightlyBreakdown.reduce((acc, day) => {
-        return acc + (day.originalPrice - day.price);
-      }, 0);
-    }
-
-    // =============================
-    // RESPONSE
-    // =============================
     res.json({
       nights,
       subtotal,
@@ -221,22 +158,18 @@ if (nights < minNights) {
       taxes,
       warranty,
       total,
-      nightlyBreakdown,
-      savings,
-      dealApplied: !!deal,
     });
 
-  } catch (error) {
-    // console.error("Preview Booking Error:", error);
-    res.status(500).json({ error: "Server error" });
+  } catch (err) {
+    console.error("❌ PREVIEW ERROR:", err.message);
+    res.status(500).json({ error: "Preview failed" });
   }
 };
-
 // ----------------------------------------------------------
 // CREATE BOOKING (Stripe Verification)
 // ----------------------------------------------------------
+
 export const createBooking = async (req, res) => {
-  // console.log("CREATE BOOKING BODY:", req.body);
   try {
     const {
       propertyId,
@@ -244,7 +177,6 @@ export const createBooking = async (req, res) => {
       checkOut,
       guests,
       user,
-      pricing,
       paymentIntentId,
     } = req.body;
 
@@ -253,6 +185,7 @@ export const createBooking = async (req, res) => {
     }
 
     const listing = await Listing.findById(propertyId);
+
     if (!listing) {
       return res.status(404).json({ error: "Property not found" });
     }
@@ -263,36 +196,85 @@ export const createBooking = async (req, res) => {
     if (!start || !end || start >= end) {
       return res.status(400).json({ error: "Invalid booking dates" });
     }
-    // =============================
-// MIN NIGHTS VALIDATION
-// =============================
-const getMinNightsForDate = (rates, checkIn) => {
-  const selected = rates.find((r) => {
-    const from = toValidDate(r.from);
-    const to = toValidDate(r.to);
-    return checkIn >= from && checkIn <= to;
-  });
 
-  return selected?.minNights || 1;
-};
+    // ==============================
+    // MIN NIGHTS VALIDATION
+    // ==============================
+    const getMinNightsForDate = (rates, checkIn) => {
+      const selected = rates.find((r) => {
+        const from = new Date(r.from);
+        const to = new Date(r.to);
+        return checkIn >= from && checkIn <= to;
+      });
 
-const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-const minNights = getMinNightsForDate(listing.rates, start);
+      return selected?.minNights || 1;
+    };
 
-if (nights < minNights) {
-  return res.status(400).json({
-    error: `Minimum ${minNights} nights required`,
-  });
-}
+    const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const minNights = getMinNightsForDate(listing.rates, start);
 
+    if (nights < minNights) {
+      return res.status(400).json({
+        error: `Minimum ${minNights} nights required`,
+      });
+    }
+
+    // ==============================
+    // 🔥 GET ALL DEALS
+    // ==============================
+    const deals = await Deal.find({
+      listingId: propertyId,
+    });
+
+    // ==============================
+    // 🔥 PRICE CALCULATION
+    // ==============================
+    let total = 0;
+    let nightsCount = 0;
+
+    for (
+      let d = new Date(start);
+      d < end;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const current = new Date(d);
+
+      const rate = getRateForDate(listing.rates, current);
+
+      let price = rate?.nightly || 0;
+
+      // ✅ APPLY DEAL PER DATE
+      const activeDeal = deals.find((deal) => {
+        return (
+          current >= new Date(deal.dealStartDate) &&
+          current <= new Date(deal.dealEndDate) &&
+          current >= new Date(deal.displayFrom) &&
+          current <= new Date(deal.displayEnd)
+        );
+      });
+
+      if (activeDeal) {
+        price = activeDeal.discountedRate;
+      }
+
+      total += price;
+      nightsCount++;
+    }
+
+    // ==============================
+    // CREATE BOOKING
+    // ==============================
     const booking = new Booking({
       property: propertyId,
       checkIn: start,
       checkOut: end,
       guests,
-      nights: pricing?.nights,
+      nights: nightsCount,
       user,
-      pricing,
+      pricing: {
+        total,
+        nights: nightsCount,
+      },
       payment: {
         provider: "stripe",
         paid: true,
@@ -303,41 +285,46 @@ if (nights < minNights) {
 
     await booking.save();
 
-    listing.calendar = normalizeCalendar(listing.calendar);
+    // ==============================
+    // UPDATE CALENDAR
+    // ==============================
+    for (
+      let i = 0;
+      i < (end - start) / (1000 * 60 * 60 * 24);
+      i++
+    ) {
+      const current = new Date(start);
+      current.setDate(current.getDate() + i);
+      current.setHours(12, 0, 0, 0);
 
-   for (let i = 0; i < (end - start) / (1000 * 60 * 60 * 24); i++) {
-  const current = new Date(start);
-  current.setDate(start.getDate() + i);
+      const exists = listing.calendar.find(
+        (c) =>
+          new Date(c.date).toDateString() ===
+          current.toDateString()
+      );
 
-  current.setHours(12, 0, 0, 0); // 🔥 IMPORTANT
+      if (!exists) {
+        listing.calendar.push({
+          date: current,
+          status: "R",
+          source: "booking",
+        });
+      }
+    }
 
-  const exists = listing.calendar.find(
-    (c) => dateOnly(c.date) === dateOnly(current)
-  );
-
-  if (!exists) {
-    listing.calendar.push({
-      date: current,
-      status: "R",
-      source: "booking",
-    });
-  }
-}
-
-    listing.calendar = normalizeCalendar(listing.calendar);
-  //  console.log("FINAL CALENDAR SAVE:", listing.calendar);
     await listing.save();
 
     res.json({
-      message: "Booking confirmed & calendar updated",
+      message: "Booking confirmed",
       bookingId: booking._id,
+      totalPrice: total,
     });
+
   } catch (err) {
-    // console.error("Create booking error:", err);
+    console.error("❌ BOOKING ERROR:", err.message);
     res.status(500).json({ error: "Booking failed" });
   }
 };
-
 // ----------------------------------------------------------
 // UPDATE BOOKING STATUS
 // ----------------------------------------------------------

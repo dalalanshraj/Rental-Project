@@ -2,20 +2,18 @@ import Deal from "../models/Deal.js";
 
 export const createDeal = async (req, res) => {
   try {
-    const deal = new Deal({
-      ...req.body,
-      displayFrom: new Date(req.body.displayFrom),
-      displayEnd: new Date(req.body.displayEnd),
-      dealStartDate: new Date(req.body.dealStartDate),
-      dealEndDate: new Date(req.body.dealEndDate),
-    });
+    console.log("BODY 👉", req.body); // 👈 ADD THIS
+
+    const deal = new Deal(req.body);
 
     await deal.save();
+
+    console.log("SAVED DEAL 👉", deal); // 👈 ADD THIS
 
     res.json(deal);
 
   } catch (err) {
-    console.error("❌ CREATE DEAL ERROR:", err.message);
+    console.error("❌ CREATE DEAL ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -75,22 +73,33 @@ export const deleteDeal = async (req,res)=>{
 }
 export const getActiveDeals = async (req, res) => {
   try {
-
     const today = new Date();
 
-    const deals = await Deal.find({
-      displayFrom: { $lte: today },
-      displayEnd: { $gte: today }
-    }).populate("listingId");
+    const deals = await Deal.find().populate("listingId");
 
-    const listings = deals.map(d => ({
-      ...d.listingId._doc,
-      deal: d
-    }));
+    const listings = deals
+      .filter((d) => {
+        if (!d.listingId) return false;
+
+        // ✅ ONLY DISPLAY FILTER (RELAXED)
+        return (
+          d.displayFrom &&
+          d.displayEnd &&
+          new Date(d.displayFrom) <= today &&
+          new Date(d.displayEnd) >= today
+        );
+      })
+      .map((d) => ({
+        ...d.listingId._doc,
+        deal: d,
+      }));
+
+    console.log("🔥 FINAL DEAL LIST 👉", listings);
 
     res.json(listings);
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };

@@ -12,9 +12,7 @@ const PropertyCard = ({ listing }) => {
 
   // PRICE
  const originalPrice =
-  listing?.rates?.length > 0
-    ? listing.rates[0].nightly
-    : null;
+  listing?.rates?.[0]?.nightly || null;
 
 const dealPrice = listing?.deal?.discountedRate;
 
@@ -47,7 +45,7 @@ const price = dealPrice || originalPrice || "Call for price";
           {listing?.property?.category ?? "Vacation Rental"}
         </p>
 
-      <div className="text-lg font-semibold">
+    <div className="text-lg font-semibold">
 
   {listing?.deal ? (
     <>

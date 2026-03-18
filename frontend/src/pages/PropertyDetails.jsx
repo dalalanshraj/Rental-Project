@@ -32,7 +32,7 @@ const PropertyDetail = () => {
   const [blockedDates, setBlockedDates] = useState([]);
   const [openInquiry, setOpenInquiry] = useState(false);
   const [calendarData, setCalendarData] = useState([]);
-  
+
 
   // ================= FETCH LISTING =================
   useEffect(() => {
@@ -46,50 +46,50 @@ const PropertyDetail = () => {
   }, [id]);
 
   // ================= FETCH CALENDAR =================
- useEffect(() => {
-  api.get(`/listings/${id}/calendar`).then((res) => {
-    const blocked = res.data
-      .filter((d) => d.status === "R" || d.status === "H")
-      .map((d) => {
-        const dt = new Date(d.date);
-        dt.setHours(0, 0, 0, 0);
-        return dt;
-      });
+  useEffect(() => {
+    api.get(`/listings/${id}/calendar`).then((res) => {
+      const blocked = res.data
+        .filter((d) => d.status === "R" || d.status === "H")
+        .map((d) => {
+          const dt = new Date(d.date);
+          dt.setHours(0, 0, 0, 0);
+          return dt;
+        });
 
-    setBlockedDates(blocked);
-  });
-}, [id]);
+      setBlockedDates(blocked);
+    });
+  }, [id]);
   const getMinNightsForDate = (date) => {
-  if (!listing?.rates || !date) return 1;
+    if (!listing?.rates || !date) return 1;
 
-  const selected = listing.rates.find((r) => {
-    const from = new Date(r.from);
-    const to = new Date(r.to);
+    const selected = listing.rates.find((r) => {
+      const from = new Date(r.from);
+      const to = new Date(r.to);
 
-    from.setHours(0, 0, 0, 0);
-    to.setHours(23, 59, 59, 999);
+      from.setHours(0, 0, 0, 0);
+      to.setHours(23, 59, 59, 999);
 
-    return date >= from && date <= to;
-  });
+      return date >= from && date <= to;
+    });
 
-  return selected?.minNights || 1;
-};
+    return selected?.minNights || 1;
+  };
 
-// 🔹 useEffect
-useEffect(() => {
-  if (checkIn && checkOut && listing) {
-    const minNights = getMinNightsForDate(checkIn);
+  // 🔹 useEffect
+  useEffect(() => {
+    if (checkIn && checkOut && listing) {
+      const minNights = getMinNightsForDate(checkIn);
 
-    const diff =
-      (checkOut - checkIn) / (1000 * 60 * 60 * 24);
+      const diff =
+        (checkOut - checkIn) / (1000 * 60 * 60 * 24);
 
-    if (diff < minNights) {
-      const newDate = new Date(checkIn);
-      newDate.setDate(newDate.getDate() + minNights);
-      setCheckOut(newDate);
+      if (diff < minNights) {
+        const newDate = new Date(checkIn);
+        newDate.setDate(newDate.getDate() + minNights);
+        setCheckOut(newDate);
+      }
     }
-  }
-}, [checkIn, checkOut, listing]);
+  }, [checkIn, checkOut, listing]);
 
   if (loading) return <p className="p-10">Loading...</p>;
   if (!listing) return <p className="p-10">Property not found</p>;
@@ -127,10 +127,10 @@ useEffect(() => {
     return `${year}-${month}-${day}`;
   };
 
-  
 
-// ================= MIN NIGHT AUTO FIX =================
-// 🔹 single function
+
+  // ================= MIN NIGHT AUTO FIX =================
+  // 🔹 single function
 
   return (
     <>
@@ -317,29 +317,29 @@ useEffect(() => {
               className="border p-3 rounded w-full"
             />
 
-           <DatePicker
-  selected={checkOut}
-  onChange={(date) => setCheckOut(date)}
-  excludeDates={blockedDates}
-  placeholderText="Check-out"
-  minDate={
-    checkIn
-      ? (() => {
-          const d = new Date(checkIn);
+            <DatePicker
+              selected={checkOut}
+              onChange={(date) => setCheckOut(date)}
+              excludeDates={blockedDates}
+              placeholderText="Check-out"
+              minDate={
+                checkIn
+                  ? (() => {
+                    const d = new Date(checkIn);
 
-          // ✅ IMPORTANT FIX
-          d.setHours(12, 0, 0, 0);
+                    // ✅ IMPORTANT FIX
+                    d.setHours(12, 0, 0, 0);
 
-          d.setDate(
-            d.getDate() + getMinNightsForDate(checkIn)
-          );
+                    d.setDate(
+                      d.getDate() + getMinNightsForDate(checkIn)
+                    );
 
-          return d;
-        })()
-      : new Date()
-  }
-  className="border p-3 rounded w-full"
-/>
+                    return d;
+                  })()
+                  : new Date()
+              }
+              className="border p-3 rounded w-full"
+            />
           </div>
 
           <button
