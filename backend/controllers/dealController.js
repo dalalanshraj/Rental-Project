@@ -2,33 +2,38 @@ import Deal from "../models/Deal.js";
 
 export const createDeal = async (req, res) => {
   try {
-
-    const deal = new Deal(req.body);
+    const deal = new Deal({
+      ...req.body,
+      displayFrom: new Date(req.body.displayFrom),
+      displayEnd: new Date(req.body.displayEnd),
+      dealStartDate: new Date(req.body.dealStartDate),
+      dealEndDate: new Date(req.body.dealEndDate),
+    });
 
     await deal.save();
 
     res.json(deal);
 
   } catch (err) {
+    console.error("❌ CREATE DEAL ERROR:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
-export const getDeals = async (req,res)=>{
- try{
+export const getDeals = async (req, res) => {
+  try {
+    const { listingId } = req.params;
 
-   const today = new Date();
+    const deals = await Deal.find({
+      listingId: listingId, // ✅ THIS WAS MISSING
+    }).populate("listingId");
 
-   const deals = await Deal.find({
-      displayFrom: {$lte: today},
-      displayEnd: {$gte: today}
-   }).populate("listingId");
+    res.json(deals);
 
-   res.json(deals)
-
- }catch(err){
-   res.status(500).json({error:err.message})
- }
-}   
+  } catch (err) {
+    console.error("❌ GET DEAL ERROR:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
 export const updateDeal = async (req,res)=>{
  try{
 

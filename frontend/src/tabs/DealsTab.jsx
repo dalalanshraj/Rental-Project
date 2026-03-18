@@ -43,51 +43,51 @@ export default function DealsTab({ listingId }) {
     // ===== SAVE DEAL =====
     const saveDeal = async () => {
 
-  const payload = {
-    ...form,
-    listingId,
-    displayFrom: form.displayFrom?.toISOString(),
-    displayEnd: form.displayEnd?.toISOString(),
-    dealStartDate: form.dealStartDate?.toISOString(),
-    dealEndDate: form.dealEndDate?.toISOString(),
-  };
+        const payload = {
+            ...form,
+            listingId,
+            displayFrom: form.displayFrom?.toISOString(),
+            displayEnd: form.displayEnd?.toISOString(),
+            dealStartDate: form.dealStartDate?.toISOString(),
+            dealEndDate: form.dealEndDate?.toISOString(),
+        };
 
-  if (editDeal) {
-    await api.put(`/deals/${editDeal._id}`, payload);
-  } else {
-    await api.post(`/deals`, payload);
-  }
+        if (editDeal) {
+            await api.put(`/deals/${editDeal._id}`, payload);
+        } else {
+            await api.post(`/deals`, payload);
+        }
 
-  setShowForm(false);
-  setEditDeal(null);
+        setShowForm(false);
+        setEditDeal(null);
 
-  setForm({
-    title: "",
-    originalRate: "",
-    discountedRate: "",
-    displayFrom: null,
-    displayEnd: null,
-    dealStartDate: null,
-    dealEndDate: null,
-    description: ""
-  });
+        setForm({
+            title: "",
+            originalRate: "",
+            discountedRate: "",
+            displayFrom: null,
+            displayEnd: null,
+            dealStartDate: null,
+            dealEndDate: null,
+            description: ""
+        });
 
-  fetchDeals();
-};
+        fetchDeals();
+    };
     // ===== EDIT DEAL =====
     const openEdit = (d) => {
-  setEditDeal(d);
+        setEditDeal(d);
 
-  setForm({
-    ...d,
-    displayFrom: d.displayFrom ? new Date(d.displayFrom) : null,
-    displayEnd: d.displayEnd ? new Date(d.displayEnd) : null,
-    dealStartDate: d.dealStartDate ? new Date(d.dealStartDate) : null,
-    dealEndDate: d.dealEndDate ? new Date(d.dealEndDate) : null
-  });
+        setForm({
+            ...d,
+            displayFrom: d.displayFrom ? new Date(d.displayFrom) : null,
+            displayEnd: d.displayEnd ? new Date(d.displayEnd) : null,
+            dealStartDate: d.dealStartDate ? new Date(d.dealStartDate) : null,
+            dealEndDate: d.dealEndDate ? new Date(d.dealEndDate) : null
+        });
 
-  setShowForm(true);
-};
+        setShowForm(true);
+    };
 
     return (
         <div className=" rounded-2xl shadow p-6">
@@ -191,7 +191,7 @@ export default function DealsTab({ listingId }) {
                         <h3 className="text-xl font-bold mb-4">
 
                             {editDeal ? "Edit Deal" : "Add Deal"}
-                
+
                         </h3>
 
                         <input
