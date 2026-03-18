@@ -2,6 +2,9 @@ import Deal from "../models/Deal.js";
 
 export const createDeal = async (req, res) => {
   try {
+    if (!req.body.listingId) {
+  return res.status(400).json({ error: "Listing ID required" });
+}
     console.log("BODY 👉", req.body); // 👈 ADD THIS
 
     const deal = new Deal(req.body);

@@ -112,32 +112,43 @@ export const previewBooking = async (req, res) => {
     // ============================
     // PRICE CALCULATION
     // ============================
+     const deals = await Deal.find({
+      listingId: propertyId,
+    });
+
     let subtotal = 0;
     let nights = 0;
 
-    for (
-      let d = new Date(start);
-      d < end;
-      d.setDate(d.getDate() + 1)
-    ) {
-      const current = new Date(d);
+    
 
-      const rate = getRateForDate(listing.rates, current);
+    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+  const current = new Date(d); 
 
-      let price = rate?.nightly || 0;
+  const rate = listing.rates.find((r) => {
+    return (
+      current >= new Date(r.from) &&
+      current <= new Date(r.to)
+    );
+  });
 
-      // ✅ APPLY DEAL
-      if (
-        deal &&
-        current >= new Date(deal.dealStartDate) &&
-        current <= new Date(deal.dealEndDate)
-      ) {
-        price = deal.discountedRate;
-      }
+  let price = rate?.nightly || 0;
 
-      subtotal += price;
-      nights++;
-    }
+  const activeDeal = deals.find((deal) => {
+    return (
+      current >= new Date(deal.dealStartDate) &&
+      current <= new Date(deal.dealEndDate) &&
+      current >= new Date(deal.displayFrom) &&
+      current <= new Date(deal.displayEnd)
+    );
+  });
+
+  if (activeDeal) {
+    price = activeDeal.discountedRate;
+  }
+
+  subtotal += price;
+  nights++;
+}
 
     // ============================
     // EXTRA FEES

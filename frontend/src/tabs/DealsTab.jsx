@@ -51,7 +51,8 @@ export default function DealsTab({ listingId }) {
             dealStartDate: form.dealStartDate?.toISOString(),
             dealEndDate: form.dealEndDate?.toISOString(),
         };
-
+console.log("LISTING ID 👉", listingId);
+console.log("PAYLOAD 👉", payload);
         if (editDeal) {
             await api.put(`/deals/${editDeal._id}`, payload);
         } else {
