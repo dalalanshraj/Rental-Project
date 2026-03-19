@@ -61,27 +61,31 @@ export default function CalendarTab({ listingId }) {
   // ==============================
   // HANDLE DATE CLICK
   // ==============================
-  const handleDayClick = (date) => {
-    const clicked = normalizeDate(date);
+const handleDayClick = (date) => {
+  const clicked = normalizeDate(date);
 
-    if (!startDate) {
-      setStartDate(clicked);
-      setEndDate(clicked);
-      return;
-    }
-
-    if (!endDate) {
-      if (clicked < startDate) {
-        setStartDate(clicked);
-      } else {
-        setEndDate(clicked);
-      }
-      return;
-    }
-
+  // 🔥 first click
+  if (!startDate) {
     setStartDate(clicked);
-    setEndDate(clicked);
-  };
+    setEndDate(null); // ❗ IMPORTANT
+    return;
+  }
+
+  // 🔥 second click
+  if (!endDate) {
+    if (clicked < startDate) {
+      setStartDate(clicked);
+      setEndDate(startDate);
+    } else {
+      setEndDate(clicked);
+    }
+    return;
+  }
+
+  // 🔥 reset selection
+  setStartDate(clicked);
+  setEndDate(null);
+};
 
   // ==============================
   // REFRESH CALENDAR
@@ -112,7 +116,7 @@ export default function CalendarTab({ listingId }) {
     setLoading(true);
 
     try {
-   await api.put(
+   await api.post(
   `/listings/${listingId}/calendar/block`,
   
   {
@@ -144,7 +148,7 @@ export default function CalendarTab({ listingId }) {
   setLoading(true);
 
   try {
-    await api.put(
+    await api.post(
       `/listings/${listingId}/calendar/unblock`, // ✅ FIXED
       {
         startDate: formatLocalDate(startDate),
@@ -169,9 +173,13 @@ export default function CalendarTab({ listingId }) {
     const d = normalizeDate(date);
     const key = formatLocalDate(d);
 
-    if (startDate && endDate && d >= startDate && d <= endDate) {
-      return "bg-blue-400 text-white rounded-lg";
-    }
+   if (startDate && !endDate && d.getTime() === startDate.getTime()) {
+  return "bg-blue-400 text-white rounded-lg";
+}
+
+if (startDate && endDate && d >= startDate && d <= endDate) {
+  return "bg-blue-400 text-white rounded-lg";
+}
 
     const found = calendarMap[key];
 

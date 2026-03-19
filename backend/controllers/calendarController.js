@@ -121,7 +121,7 @@ export const removeCalendarDate = async (req, res) => {
 };
 
 export const getCalendar = async (req, res) => {
-  console.log("GET CALENDAR listing id:", req.params.id);
+  // console.log("GET CALENDAR listing id:", req.params.id);
   try {
     const listing = await Listing.findById(req.params.id).select("calendar");
 
@@ -221,10 +221,17 @@ export const unblockDates = async (req, res) => {
 
     listing.calendar = normalizeCalendar(listing.calendar);
 
+    const startKey = dateOnly(start);
+    const endKey = dateOnly(end);
+
     listing.calendar = listing.calendar.filter((c) => {
-      const d = toValidDate(c.date);
-      if (!d) return false;
-      return d < start || d > end;
+      const key = dateOnly(c.date);
+
+      // 🔥 booking dates protect karo
+      if (c.source === "booking") return true;
+
+      // 🔥 range ke andar wale remove karo
+      return key < startKey || key > endKey;
     });
 
     await listing.save();

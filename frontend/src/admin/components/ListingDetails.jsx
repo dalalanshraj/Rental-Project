@@ -13,8 +13,8 @@ const image =
   listing?.photos?.length > 0
     ? `${import.meta.env.VITE_API_URL}${listing.photos[0]}`
     : "https://via.placeholder.com/400x300?text=No+Image";
-  console.log("photos:", listing.photos);
-  console.log("image url:", image);
+  // console.log("photos:", listing.photos);
+  // console.log("image url:", image);
   const price =
     listing?.rates && listing.rates.length > 0
       ? `$${listing.rates[0].nightly}/night`

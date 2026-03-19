@@ -12,7 +12,7 @@ export default function ProCalendar({ listingId }) {
     const fetchCalendar = async () => {
       try {
         const res = await api.get(`/listings/${listingId}/calendar`);
-        console.log("API CALENDAR RESPONSE:", res.data);
+        // console.log("API CALENDAR RESPONSE:", res.data);
         setCalendar(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Calendar fetch error:", err);
@@ -28,7 +28,7 @@ export default function ProCalendar({ listingId }) {
     setRefresh(prev => !prev);
   };
 
-  console.log("calendar state frontend:", calendar);
+  // console.log("calendar state frontend:", calendar);
 
   const start = currentMonth.startOf("month");
   const end = currentMonth.endOf("month");

@@ -84,15 +84,15 @@ function PaymentForm({ guest, pricing, formData, selectedMethod, showPopup }) {
     const bookingId = bookingData.bookingId;
 
     // CONFIRM BOOKING
-    await fetch(`${import.meta.env.VITE_API_URL}/bookings/${bookingId}/status`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      credentials: "include",
-      body: JSON.stringify({ status: "confirmed" }),
-    });
+    // await fetch(`${import.meta.env.VITE_API_URL}/bookings/${bookingId}/status`, {
+    //   method: "PUT",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+    //   },
+    //   credentials: "include",
+    //   body: JSON.stringify({ status: "confirmed" }),
+    // });
 
     showPopup("Booking Confirmed 🎉", "Payment successful & dates booked!");
   } catch (err) {

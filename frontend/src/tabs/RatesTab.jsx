@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios.js";
 import { useModal } from "../context/ModalContext";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 /* ===============================
    EMPTY STRUCTURES
 ================================ */
 const emptyRate = {
   season: "",
-  from: "",
-  to: "",
+  from: null,
+  to: null,
   nightly: "",
   weekly: "",
   monthly: "",
@@ -196,25 +198,85 @@ export default function RatesTab({ listingId, goNextTab }) {
           Rental Rates
         </h2>
 
-        <div className="grid grid-cols-8 gap-2 text-sm">
-          {["season", "from", "to", "nightly", "weekly", "monthly", "minNights"].map((f, i) => (
-            <input
-              key={i}
-              type={f === "from" || f === "to" ? "date" : "text"}
-              placeholder={f}
-              className="border p-2"
-              value={form[f]}
-              onChange={e => setForm({ ...form, [f]: e.target.value })}
-            />
-          ))}
+       <div className="grid grid-cols-8 gap-2 text-sm">
 
-          <button
-            onClick={addRate}
-            className="bg-green-600 text-white rounded cursor-pointer"
-          >
-            Add
-          </button>
-        </div>
+  {/* SEASON */}
+  <input
+    type="text"
+    placeholder="season"
+    className="border p-2"
+    value={form.season}
+    onChange={e => setForm({ ...form, season: e.target.value })}
+  />
+
+  {/* FROM DATE */}
+<DatePicker
+  selected={form.from}
+  onChange={(date) => setForm({ ...form, from: date })}
+  selectsStart
+  startDate={form.from}
+  endDate={form.to}
+  placeholderText="From"
+  className="border p-2 w-full"
+  portalId="root" // 🔥 FIX
+/>
+
+<DatePicker
+  selected={form.to}
+  onChange={(date) => setForm({ ...form, to: date })}
+  selectsEnd
+  startDate={form.from}
+  endDate={form.to}
+  minDate={form.from}
+  placeholderText="To"
+  className="border p-2 w-full"
+  portalId="root" // 🔥 FIX
+/>
+
+  {/* NIGHTLY */}
+  <input
+    type="number"
+    placeholder="nightly"
+    className="border p-2"
+    value={form.nightly}
+    onChange={e => setForm({ ...form, nightly: e.target.value })}
+  />
+
+  {/* WEEKLY */}
+  <input
+    type="number"
+    placeholder="weekly"
+    className="border p-2"
+    value={form.weekly}
+    onChange={e => setForm({ ...form, weekly: e.target.value })}
+  />
+
+  {/* MONTHLY */}
+  <input
+    type="number"
+    placeholder="monthly"
+    className="border p-2"
+    value={form.monthly}
+    onChange={e => setForm({ ...form, monthly: e.target.value })}
+  />
+
+  {/* MIN NIGHTS */}
+  <input
+    type="number"
+    placeholder="minNights"
+    className="border p-2"
+    value={form.minNights}
+    onChange={e => setForm({ ...form, minNights: e.target.value })}
+  />
+
+  <button
+    onClick={addRate}
+    className="bg-green-600 text-white rounded cursor-pointer"
+  >
+    Add
+  </button>
+
+</div>
 
         {rates.map((rate, i) => (
           <div

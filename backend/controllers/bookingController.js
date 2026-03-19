@@ -17,6 +17,11 @@ const toValidDate = (value) => {
   return isNaN(d.getTime()) ? null : d;
 };
 
+const toDateKey = (date) => {
+  const d = new Date(date);
+  return d.toISOString().split("T")[0]; // 👉 "2026-03-19"
+};
+
 const normalizeNoonDate = (value) => {
   if (!value) return null;
 
@@ -67,7 +72,21 @@ const normalizeCalendar = (calendar = []) => {
     })
     .filter(Boolean);
 };
-
+// ================================
+// HELPERS
+// ================================
+const normalize = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+const getRateForDate = (rates, date) => {
+  return rates.find((r) => {
+    const from = new Date(r.from);
+    const to = new Date(r.to);
+    return date >= from && date <= to;
+  });
+};
 // ----------------------------------------------------------
 // PREVIEW BOOKING
 // ----------------------------------------------------------
@@ -101,54 +120,49 @@ export const previewBooking = async (req, res) => {
     // ============================
     // RATE FINDER
     // ============================
-    const getRateForDate = (rates, date) => {
-      return rates.find((r) => {
-        const from = new Date(r.from);
-        const to = new Date(r.to);
-        return date >= from && date <= to;
-      });
-    };
 
     // ============================
     // PRICE CALCULATION
     // ============================
-     const deals = await Deal.find({
+    const deals = await Deal.find({
       listingId: propertyId,
     });
 
     let subtotal = 0;
     let nights = 0;
 
-    
+
 
     for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-  const current = new Date(d); 
+      const current = new Date(d);
 
-  const rate = listing.rates.find((r) => {
-    return (
-      current >= new Date(r.from) &&
-      current <= new Date(r.to)
-    );
-  });
+      const rate = listing.rates.find((r) => {
+        return (
+          current >= new Date(r.from) &&
+          current <= new Date(r.to)
+        );
+      });
 
-  let price = rate?.nightly || 0;
+      let price = rate?.nightly || 0;
 
-  const activeDeal = deals.find((deal) => {
-    return (
-      current >= new Date(deal.dealStartDate) &&
-      current <= new Date(deal.dealEndDate) &&
-      current >= new Date(deal.displayFrom) &&
-      current <= new Date(deal.displayEnd)
-    );
-  });
+    const activeDeal = deals.find((deal) => {
+  const currentKey = toDateKey(current);
+  const startKey = toDateKey(deal.dealStartDate);
+  const endKey = toDateKey(deal.dealEndDate);
 
-  if (activeDeal) {
-    price = activeDeal.discountedRate;
-  }
+  return currentKey >= startKey && currentKey <= endKey;
+});
+// console.log("CURRENT DATE 👉", current);
+// console.log("DEAL START 👉", deals[0]?.dealStartDate);
+// console.log("DEAL END 👉", deals[0]?.dealEndDate);
+// console.log("ACTIVE DEAL 👉", activeDeal);
+      if (activeDeal) {
+        price = activeDeal.discountedRate;
+      }
 
-  subtotal += price;
-  nights++;
-}
+      subtotal += price;
+      nights++;
+    }
 
     // ============================
     // EXTRA FEES
@@ -236,33 +250,27 @@ export const createBooking = async (req, res) => {
     const deals = await Deal.find({
       listingId: propertyId,
     });
-
+    console.log("🔥 DEALS 👉", deals);
     // ==============================
     // 🔥 PRICE CALCULATION
     // ==============================
     let total = 0;
     let nightsCount = 0;
 
-    for (
-      let d = new Date(start);
-      d < end;
-      d.setDate(d.getDate() + 1)
-    ) {
+    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
       const current = new Date(d);
 
-      const rate = getRateForDate(listing.rates, current);
+      const rate = getRateForDate(listing.rates, current); // ✅ ADD THIS
 
       let price = rate?.nightly || 0;
 
-      // ✅ APPLY DEAL PER DATE
-      const activeDeal = deals.find((deal) => {
-        return (
-          current >= new Date(deal.dealStartDate) &&
-          current <= new Date(deal.dealEndDate) &&
-          current >= new Date(deal.displayFrom) &&
-          current <= new Date(deal.displayEnd)
-        );
-      });
+    const activeDeal = deals.find((deal) => {
+  const currentKey = toDateKey(current);
+  const startKey = toDateKey(deal.dealStartDate);
+  const endKey = toDateKey(deal.dealEndDate);
+
+  return currentKey >= startKey && currentKey <= endKey;
+});
 
       if (activeDeal) {
         price = activeDeal.discountedRate;
@@ -321,6 +329,27 @@ export const createBooking = async (req, res) => {
           source: "booking",
         });
       }
+
+    }
+    // ==============================
+    // ADD TURNOVER DAY (CHECKOUT)
+    // ==============================
+
+    const turnoverDate = new Date(end);
+    turnoverDate.setHours(12, 0, 0, 0);
+
+    const turnoverExists = listing.calendar.find(
+      (c) =>
+        new Date(c.date).toDateString() ===
+        turnoverDate.toDateString()
+    );
+
+    if (!turnoverExists) {
+      listing.calendar.push({
+        date: turnoverDate,
+        status: "H", // 🔥 HALF DAY
+        source: "booking",
+      });
     }
 
     await listing.save();
@@ -506,11 +535,11 @@ export const deleteBooking = async (req, res) => {
     }
 
     const toDateKey = (value) => {
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return null;
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return null;
 
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
 
     const start = new Date(booking.checkIn);
     const end = new Date(booking.checkOut);
@@ -539,13 +568,13 @@ export const deleteBooking = async (req, res) => {
       if (!key) return false;
 
       // remove all booking-created reserved dates
-     if (item.status === "R" && stayDateKeys.has(key)) {
-  return false;
-}
+      if (item.status === "R" && stayDateKeys.has(key)) {
+        return false;
+      }
       // remove booking-created turnover day
-     if (item.status === "H" && key === turnoverKey) {
-  return false;
-}
+      if (item.status === "H" && key === turnoverKey) {
+        return false;
+      }
 
       return true;
     });
