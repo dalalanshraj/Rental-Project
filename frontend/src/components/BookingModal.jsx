@@ -89,7 +89,7 @@ export default function BookingPreviewModal({
       {/* ✅ MODAL BOX */}
       <div
         className="bg-white rounded-2xl w-full max-w-xl p-6 relative"
-        onClick={(e) => e.stopPropagation()} // 🔥 IMPORTANT
+        onClick={(e) => e.stopPropagation()} //  IMPORTANT
       >
         {/* CLOSE BUTTON */}
         <button
@@ -112,27 +112,15 @@ export default function BookingPreviewModal({
             </span>
           </div>
 
-          <div className="flex justify-between">
-            <span>Cleaning fee</span>
-            <span>${preview.cleaningFee}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>Service fee</span>
-            <span>${preview.serviceFee}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>Sales tax</span>
-            <span>${preview.taxes}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>Warranty</span>
-            <span>${preview.warranty}</span>
-          </div>
-
-          <hr />
+          {preview.extraFees?.length > 0 &&
+  preview.extraFees
+    .filter(f => f.option === "mandatory")
+    .map((fee, i) => (
+      <div key={i} className="flex justify-between">
+        <span>{fee.name}</span>
+        <span>${fee.amount}</span>
+      </div>
+))}
 
           <div className="flex justify-between text-xl font-bold">
             <span>Estimated total due</span>

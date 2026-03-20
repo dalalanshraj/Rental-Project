@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/axios.js";
 import dayjs from "dayjs";
+import { FaArrowLeftLong } from "react-icons/fa6";
+import { FaArrowRightLong } from "react-icons/fa6";
 
 export default function ProCalendar({ listingId }) {
   const [calendar, setCalendar] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [refresh, setRefresh] = useState(false);
 
-  // 🔥 fetch calendar
+  //  fetch calendar
   useEffect(() => {
     const fetchCalendar = async () => {
       try {
@@ -23,7 +25,7 @@ export default function ProCalendar({ listingId }) {
     if (listingId) fetchCalendar();
   }, [listingId, refresh]); // ✅ FIXED
 
-  // 🔥 expose refresh
+  //  expose refresh
   const triggerRefresh = () => {
     setRefresh(prev => !prev);
   };
@@ -55,9 +57,25 @@ export default function ProCalendar({ listingId }) {
 
   return (
     <div className="bg-white shadow rounded-xl p-6 mt-10">
-      <h2 className="text-xl font-bold mb-4">
-        {currentMonth.format("MMMM YYYY")}
-      </h2>
+      <div className="flex justify-between items-center mb-4 ">
+  <button
+    onClick={() => setCurrentMonth(currentMonth.subtract(1, "month"))}
+    className="px-3 py-1  rounded cursor-pointer"
+  >
+    <FaArrowLeftLong />
+  </button>
+
+  <h2 className="text-xl font-bold">
+    {currentMonth.format("MMMM YYYY")}
+  </h2>
+
+  <button
+    onClick={() => setCurrentMonth(currentMonth.add(1, "month"))}
+    className="px-3 py-1  rounded cursor-pointer"
+  >
+    <FaArrowRightLong />
+  </button>
+</div>
 
       <div className="grid grid-cols-7 text-center font-semibold mb-2">
         {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (

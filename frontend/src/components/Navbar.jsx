@@ -2,16 +2,31 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Phone } from "lucide-react";
 import { Link } from "react-router-dom";
+import api from "../api/axios.js"
 import logoIme from "../assets/logo/logo-img.png"; // Default logo
 import logoScrolled from "../assets/logo/logo-img1.png"; // <-- Add your second logo here
 
-const Navbar = () => {
+const Navbar = ({listing}) => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+ const [communities, setCommunities] = useState([]);
  if (location.pathname.startsWith("/admin")) {
     return null;
   }
+useEffect(() => {
+  const fetchCommunities = async () => {
+    try {
+      const res = await api.get("/listings/published");
+      setCommunities(res.data);
+      // console.log(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchCommunities();
+}, []);
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -22,20 +37,16 @@ const Navbar = () => {
 
   const dropdowns = {
     ABOUT: [
-      { name: "ABOUT", link: "/about" },
-      { name: "FAQ", link: "/faq" },
-      { name: "CONTACT", link: "/contact" },
+      { name: "ABOUT", link: "about-us" },
+      // { name: "FAQ", link: "/faq" },
+      // { name: "CONTACT", link: "/contact" },
     ],
-    COMMUNITIES: [
-      { name: "Sea Dunes", link: "/communities/destin" },
-      { name: "Jade East 210", link: "/communities/okaloosa" },
-      { name: "Grand Caribbean West", link: "/communities/santa-rosa" },
-      { name: "Crystal Sands", link: "/communities/navarre" },
-       { name: "Beach Sanctuary", link: "/communities/destin" },
-      { name: "Shoreline Towers 2051", link: "/communities/okaloosa" },
-      { name: "Summer Breeze", link: "/communities/santa-rosa" },
-      { name: "Summer Spell", link: "/communities/navarre" },
-    ],
+COMMUNITIES: Array.isArray(communities)
+  ? communities.map((item) => ({
+      name: item.property?.title,   // ✅ FIXED
+      link: `/community/${item._id}`,
+    }))
+  : [],
     "WHAT WE OFFER": [{ name: "Properties", link: "/properties" }],
   };
 
@@ -116,17 +127,17 @@ const Navbar = () => {
 
               {/* Dropdown */}
               {openDropdown === item.name && hasDropdown && (
-                <ul className="absolute top-10 left-0 bg-blue-500 text-white rounded shadow-lg mt-1 min-w-[160px]">
-                  {dropdowns[item.name].map((sub) => (
-                    <li key={sub.name}>
-                      <Link
-                        to={sub.link}
-                        className="block px-4 py-2 hover:bg-blue-600 whitespace-nowrap"
-                      >
-                        {sub.name}
-                      </Link>
-                    </li>
-                  ))}
+                <ul className="absolute top-10 left-0 bg-blue-500 text-white rounded shadow-lg mt-1 min-w-[160px] z-50">
+                  {dropdowns[item.name].map((sub, index) => (
+  <li key={sub._id || index}>
+    <Link
+      to={sub.link}
+      className="block px-4 py-2 hover:bg-blue-600 whitespace-nowrap"
+    >
+      {sub.name}
+    </Link>
+  </li>
+))}
                 </ul>
               )}
             </div>

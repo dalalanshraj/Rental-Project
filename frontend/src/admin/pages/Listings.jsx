@@ -46,7 +46,7 @@ export default function Listings() {
         }
       );
 
-      // 🔥 UPDATE ONLY THAT LISTING
+      //  UPDATE ONLY THAT LISTING
       setListings((prev) =>
         prev.map((l) =>
           l._id === id ? { ...l, status: res.data.status } : l

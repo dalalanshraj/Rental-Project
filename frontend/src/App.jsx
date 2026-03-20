@@ -25,6 +25,8 @@ import Bookings from "./admin/pages/Bookings";
 import Users from "./admin/pages/Users";
 import SpecialsDeals from "./pages/Specials";
 import Reviews from "./pages/Reviews";
+import AboutUs from "./pages/About";
+import CommunityDetails from "./pages/CommunityDetails";
 
 function App() {
   const location = useLocation();
@@ -47,6 +49,8 @@ function App() {
         <Route path="/specials" element={<SpecialsDeals/>} />
         <Route path="/reviews" element={< Reviews />} />
         <Route path="/sea-dunes-beach-front" element={<SeaDunesBeachFront />} />
+        <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/community/:id" element={<CommunityDetails />} />
         
           
 

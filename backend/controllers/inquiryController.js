@@ -17,7 +17,7 @@ export const createInquiry = async (req, res) => {
       message,
     });
 
-    // 🔥 populate property title
+    //  populate property title
     const populatedInquiry = await Inquiry.findById(inquiry._id)
       .populate("property", "title");
 

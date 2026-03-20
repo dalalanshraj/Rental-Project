@@ -20,7 +20,7 @@ export default function ReviewModal({ onClose }) {
     api
       .get("/listings/public")
       .then((res) => {
-        console.log("🔥 LISTINGS 👉", res.data);
+        // console.log(" LISTINGS 👉", res.data);
         setListings(res.data);
       })
       .catch((err) => console.error(err));

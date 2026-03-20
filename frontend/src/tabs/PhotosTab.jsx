@@ -67,7 +67,7 @@ export default function PhotosTab({ listingId, goNextTab }) {
       
       setPhotos(res.data.photos);
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       showModal("Delete failed");
     }
   };

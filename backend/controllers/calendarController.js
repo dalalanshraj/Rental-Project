@@ -227,10 +227,10 @@ export const unblockDates = async (req, res) => {
     listing.calendar = listing.calendar.filter((c) => {
       const key = dateOnly(c.date);
 
-      // 🔥 booking dates protect karo
+      //  booking dates protect karo
       if (c.source === "booking") return true;
 
-      // 🔥 range ke andar wale remove karo
+      //  range ke andar wale remove karo
       return key < startKey || key > endKey;
     });
 

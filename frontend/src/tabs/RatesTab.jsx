@@ -75,7 +75,7 @@ export default function RatesTab({ listingId, goNextTab }) {
       let res;
 
       if (editRateIndex !== null) {
-        // 🔥 EDIT MODE
+        //  EDIT MODE
         res = await api.put(
           `/listings/${listingId}/rates/edit`,
           {
@@ -218,7 +218,7 @@ export default function RatesTab({ listingId, goNextTab }) {
   endDate={form.to}
   placeholderText="From"
   className="border p-2 w-full"
-  portalId="root" // 🔥 FIX
+  portalId="root" //  FIX
 />
 
 <DatePicker
@@ -230,7 +230,7 @@ export default function RatesTab({ listingId, goNextTab }) {
   minDate={form.from}
   placeholderText="To"
   className="border p-2 w-full"
-  portalId="root" // 🔥 FIX
+  portalId="root" //  FIX
 />
 
   {/* NIGHTLY */}

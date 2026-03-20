@@ -1,4 +1,5 @@
 import Listing from "../models/Listing.js";
+import Deal from "../models/Deal.js";
 
 export const searchController = async (req, res) => {
   try {
@@ -31,8 +32,25 @@ export const searchController = async (req, res) => {
       return true;
     });
 
+    const today = new Date();
+
+    const resultsWithDeals = await Promise.all(
+      availableListings.map(async (listing) => {
+        const deal = await Deal.findOne({
+          listingId: listing._id,
+          displayFrom: { $lte: today },
+          displayEnd: { $gte: today },
+        });
+
+        return {
+          ...listing._doc,
+          deal: deal || null,
+        };
+      })
+    );
+
     res.json({
-      results: availableListings,
+      results: resultsWithDeals,
       total: availableListings.length,
     });
 

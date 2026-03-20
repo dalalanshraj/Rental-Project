@@ -24,84 +24,84 @@ function PaymentForm({ guest, pricing, formData, selectedMethod, showPopup }) {
   const params = new URLSearchParams(window.location.search);
   const propertyId = params.get("propertyId");
 
- const handlePayment = async () => {
-  if (!stripe || !elements) return;
+  const handlePayment = async () => {
+    if (!stripe || !elements) return;
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    // CREATE PAYMENT INTENT
-    const intentRes = await fetch(`${import.meta.env.VITE_API_URL}/bookings/create-payment-intent`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: pricing.total }),
-    });
+    try {
+      // CREATE PAYMENT INTENT
+      const intentRes = await fetch(`${import.meta.env.VITE_API_URL}/bookings/create-payment-intent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: pricing.total }),
+      });
 
-    if (!intentRes.ok) throw new Error("Payment intent failed");
+      if (!intentRes.ok) throw new Error("Payment intent failed");
 
-    const { clientSecret } = await intentRes.json();
+      const { clientSecret } = await intentRes.json();
 
-    // STRIPE PAYMENT
-    const paymentResult = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: {
-        card: elements.getElement(CardElement),
-        billing_details: {
-          name: `${guest.firstName} ${guest.lastName}`,
-          email: guest.email,
+      // STRIPE PAYMENT
+      const paymentResult = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement),
+          billing_details: {
+            name: `${guest.firstName} ${guest.lastName}`,
+            email: guest.email,
+          },
         },
-      },
-    });
+      });
 
-    if (paymentResult.error) {
-      setLoading(false);
-      return showPopup("Payment Error", paymentResult.error.message);
+      if (paymentResult.error) {
+        setLoading(false);
+        return showPopup("Payment Error", paymentResult.error.message);
+      }
+
+      // CREATE BOOKING
+      const bookingRes = await fetch(`${import.meta.env.VITE_API_URL}/bookings/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          user: guest,
+          pricing,
+          paymentIntentId: paymentResult.paymentIntent.id,
+          propertyId,
+          checkIn: formData.checkIn,
+          checkOut: formData.checkOut,
+          guests: 1,
+        }),
+      });
+
+      const bookingData = await bookingRes.json();
+
+      if (!bookingRes.ok) {
+        throw new Error(bookingData.message || "Booking failed");
+      }
+
+      const bookingId = bookingData.bookingId;
+
+      // CONFIRM BOOKING
+      // await fetch(`${import.meta.env.VITE_API_URL}/bookings/${bookingId}/status`, {
+      //   method: "PUT",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+      //   },
+      //   credentials: "include",
+      //   body: JSON.stringify({ status: "confirmed" }),
+      // });
+
+      showPopup("Booking Confirmed 🎉", "Payment successful & dates booked!");
+    } catch (err) {
+      console.error(err);
+      showPopup("Payment Failed", "Something went wrong.");
     }
 
-    // CREATE BOOKING
-    const bookingRes = await fetch(`${import.meta.env.VITE_API_URL}/bookings/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({
-        user: guest,
-        pricing,
-        paymentIntentId: paymentResult.paymentIntent.id,
-        propertyId,
-        checkIn: formData.checkIn,
-        checkOut: formData.checkOut,
-        guests: 1,
-      }),
-    });
-
-    const bookingData = await bookingRes.json();
-
-    if (!bookingRes.ok) {
-      throw new Error(bookingData.message || "Booking failed");
-    }
-
-    const bookingId = bookingData.bookingId;
-
-    // CONFIRM BOOKING
-    // await fetch(`${import.meta.env.VITE_API_URL}/bookings/${bookingId}/status`, {
-    //   method: "PUT",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: `Bearer ${localStorage.getItem("token")}`,
-    //   },
-    //   credentials: "include",
-    //   body: JSON.stringify({ status: "confirmed" }),
-    // });
-
-    showPopup("Booking Confirmed 🎉", "Payment successful & dates booked!");
-  } catch (err) {
-    console.error(err);
-    showPopup("Payment Failed", "Something went wrong.");
-  }
-
-  setLoading(false);
-};
+    setLoading(false);
+  };
 
   return (
     <div className="p-6 bg-white rounded-2xl shadow-lg">
@@ -154,51 +154,51 @@ export default function BookingPage() {
   // GET DATES FROM URL
   useEffect(() => {
 
-  const rawCheckIn = params.get("checkIn");
-  const rawCheckOut = params.get("checkOut");
+    const rawCheckIn = params.get("checkIn");
+    const rawCheckOut = params.get("checkOut");
 
-  const ci = rawCheckIn ? rawCheckIn.split("T")[0] : "";
-  const co = rawCheckOut ? rawCheckOut.split("T")[0] : "";
+    const ci = rawCheckIn ? rawCheckIn.split("T")[0] : "";
+    const co = rawCheckOut ? rawCheckOut.split("T")[0] : "";
 
-  setFormData({
-    checkIn: ci,
-    checkOut: co
-  });
+    setFormData({
+      checkIn: ci,
+      checkOut: co
+    });
 
-}, []);
+  }, []);
 
   // LOAD PRICE PREVIEW
-useEffect(() => {
-  if (!formData.checkIn || !formData.checkOut || !propertyId) return;
+  useEffect(() => {
+    if (!formData.checkIn || !formData.checkOut || !propertyId) return;
 
-  const loadPricing = async () => {
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/bookings/preview`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            propertyId,
-            checkIn: formData.checkIn,
-            checkOut: formData.checkOut,
-          }),
-        }
-      );
+    const loadPricing = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/bookings/preview`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              propertyId,
+              checkIn: formData.checkIn,
+              checkOut: formData.checkOut,
+            }),
+          }
+        );
 
-      if (!res.ok) throw new Error("Failed to load pricing");
+        if (!res.ok) throw new Error("Failed to load pricing");
 
-      const data = await res.json();
-      setPricing(data || {});
-    } catch (error) {
-      console.error("Pricing error:", error);
-    }
-  };
+        const data = await res.json();
+        setPricing(data || {});
+      } catch (error) {
+        console.error("Pricing error:", error);
+      }
+    };
 
-  loadPricing();
-}, [formData.checkIn, formData.checkOut, propertyId]);
+    loadPricing();
+  }, [formData.checkIn, formData.checkOut, propertyId]);
 
   const handleGuestChange = (e) =>
     setGuest({ ...guest, [e.target.name]: e.target.value });
@@ -211,23 +211,23 @@ useEffect(() => {
     setStep(2);
   };
 
- const pretty = (dateStr) => {
-  if (!dateStr) return "";
+  const pretty = (dateStr) => {
+    if (!dateStr) return "";
 
-  const [year, month, day] = dateStr.split("-");
+    const [year, month, day] = dateStr.split("-");
 
-  const safe = new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day)
-  );
+    const safe = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day)
+    );
 
-  return safe.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
+    return safe.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
   return (
     <>
       {/* HERO */}
@@ -311,23 +311,25 @@ useEffect(() => {
                 <p>{pretty(formData.checkIn)} → {pretty(formData.checkOut)}</p>
               </div>
 
+
+
               <div className="flex justify-between">
                 <p>Subtotal</p>
                 <p>${pricing.subtotal}</p>
               </div>
 
-              <div className="flex justify-between">
-                <p>Cleaning</p>
-                <p>${pricing.cleaningFee}</p>
-              </div>
-
-              <div className="flex justify-between">
-                <p>Taxes</p>
-                <p>${pricing.taxes}</p>
-              </div>
+              {pricing.extraFees?.length > 0 &&
+                pricing.extraFees
+                  .filter(f => f.option === "mandatory")
+                  .map((fee, i) => (
+                    <div key={i} className="flex justify-between">
+                      <p>{fee.name}</p>
+                      <p>${fee.amount}</p>
+                    </div>
+                  ))}
 
               <div className="flex justify-between font-bold text-xl mt-4">
-                <p>Total</p>
+                <p>Estimated total due</p>
                 <p>${pricing.total}</p>
               </div>
             </div>

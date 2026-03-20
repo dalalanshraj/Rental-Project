@@ -392,7 +392,7 @@ const GrandCaribbeanFront = () => {
                   }
                   placeholderText="Check In"
                   className="border p-2 rounded w-full"
-                  minDate={new Date()}   // 🔥 disable past dates
+                  minDate={new Date()}   //  disable past dates
 
                 />
 
@@ -403,7 +403,7 @@ const GrandCaribbeanFront = () => {
                   }
                   placeholderText="Check Out"
                   className="border p-2 rounded w-full"
-                  minDate={formData.checkIn || new Date()}   // 🔥 checkout always after check-in
+                  minDate={formData.checkIn || new Date()}   //  checkout always after check-in
                 />
 
               </div>

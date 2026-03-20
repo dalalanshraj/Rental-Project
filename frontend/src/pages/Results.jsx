@@ -10,34 +10,49 @@ const ResultsPage = () => {
   const [properties, setProperties] = useState([]);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  // const [deals, setDeals] = useState([]);
 
   // ==============================
   // FETCH SEARCH RESULTS
   // ==============================
-  useEffect(() => {
-    const loadResults = async () => {
-      try {
-        const params = new URLSearchParams(location.search);
+useEffect(() => {
+  const loadResults = async () => {
+    try {
+      const params = new URLSearchParams(location.search);
 
-        const checkIn = params.get("checkIn");
-        const checkOut = params.get("checkOut");
+      const checkIn = params.get("checkIn");
+      const checkOut = params.get("checkOut");
 
-        const res = await api.get("/search", {
-          params: { checkIn, checkOut },
-        });
+      const res = await api.get("/search", {
+        params: { checkIn, checkOut },
+      });
 
-        setProperties(res.data?.results || []);
-      } catch (err) {
-        console.error("Search error:", err);
-        setProperties([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+      // ✅ DIRECT SET (backend already deal bhej raha hai)
+      setProperties(res.data?.results || []);
+    } catch (err) {
+      console.error("Search error:", err);
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadResults();
-  }, [location.search]);
+  loadResults();
+}, [location.search]);
 
+// useEffect(() => {
+//   const loadDeals = async () => {
+//     try {
+//       const res = await api.get("/deals/active");
+//       setDeals(res.data || []);
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+
+//   loadDeals();
+// }, []);
+  
   return (
     <>
       {/* ================= HERO ================= */}
@@ -84,15 +99,15 @@ const ResultsPage = () => {
             <div className="h-[80vh] overflow-y-auto space-y-4">
 
               {properties.map((p) => {
-console.log("API:", import.meta.env.VITE_API_URL);
-console.log("PHOTO:", p.photos?.[0]);
+                // console.log("API:", import.meta.env.VITE_API_URL);
+                // console.log("PHOTO:", p.photos?.[0]);
 
                 // ================= IMAGE FIX =================
                 const cleanPath = p.photos?.[0]?.replace(/^\/api/, "");
                 const imageUrl = cleanPath
                   ? `${import.meta.env.VITE_API_URL}${cleanPath}`
                   : "/placeholder.jpg";
-console.log("FINAL IMAGE URL:", imageUrl);
+                // console.log("FINAL IMAGE URL:", imageUrl);
                 return (
                   <div
                     key={p._id}
@@ -100,10 +115,9 @@ console.log("FINAL IMAGE URL:", imageUrl);
                       setSelectedProperty(p);
                     }}
                     className={`border rounded-xl p-4 cursor-pointer transition
-                      ${
-                        selectedProperty?._id === p._id
-                          ? "border-blue-600 bg-blue-50"
-                          : "hover:bg-gray-50"
+                      ${selectedProperty?._id === p._id
+                        ? "border-blue-600 bg-blue-50"
+                        : "hover:bg-gray-50"
                       }`}
                   >
                     {/* IMAGE */}
@@ -138,12 +152,35 @@ console.log("FINAL IMAGE URL:", imageUrl);
                     </p>
 
                     {/* PRICE */}
-                    {Array.isArray(p.rates) && p.rates.length > 0 && (
-                      <p className="mt-2 font-semibold text-blue-700">
-                        From $
-                        {Math.min(...p.rates.map((r) => r.nightly))} / night
-                      </p>
-                    )}
+                    {/* PRICE */}
+                    {(() => {
+                      let finalPrice = null;
+
+                      // normal price
+                      if (Array.isArray(p.rates) && p.rates.length > 0) {
+                        finalPrice = Math.min(...p.rates.map((r) => r.nightly));
+                      }
+
+                      // deal override
+                      if (p.deal) {
+                        return (
+                          <div className="mt-2">
+                            <p className="text-sm line-through text-gray-400">
+                              ${finalPrice}
+                            </p>
+                            <p className="text-green-600 font-bold">
+                              ${p.deal.discountedRate} / night 
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <p className="mt-2 font-semibold text-blue-700">
+                          From ${finalPrice} / night
+                        </p>
+                      );
+                    })()}
                   </div>
                 );
               })}

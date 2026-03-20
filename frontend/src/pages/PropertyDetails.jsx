@@ -345,17 +345,17 @@ const PropertyDetail = () => {
           <button
             disabled={!checkIn || !checkOut}
             onClick={() => setOpenBooking(true)}
-            className={`w-full py-3 rounded-xl font-semibold text-white
+            className={`w-full py-3 rounded-xl font-semibold text-white 
       ${!checkIn || !checkOut
                 ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+                : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
               }`}
           >
             Book Now
           </button>
           <button
             onClick={() => setOpenInquiry(true)}
-            className="w-full py-3 rounded-xl font-semibold bg-green-600 hover:bg-green-700 text-white"
+            className="w-full py-3 rounded-xl font-semibold bg-green-600 hover:bg-green-700 text-white cursor-pointer"
           >
             Send Inquiry
           </button>

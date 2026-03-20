@@ -46,7 +46,7 @@ export const dashboardStats = async (req, res) => {
       status: "pending",
     });
 
-    // 🔥 REVIEW STATS
+    //  REVIEW STATS
     let totalReviews = 0;
     let pendingReviews = 0;
 

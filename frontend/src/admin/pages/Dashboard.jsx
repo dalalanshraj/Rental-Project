@@ -13,20 +13,21 @@ import {
   YAxis,
 } from "recharts";
 
-const COLORS = ["#ff1d58", "#f75990", "#e1b382", "#00DDFF"];
+const COLORS = ["#ff1d58", "#6366f1", "#f59e0b", "#06b6d4"];
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    api.get("/admin/dashboard").then((res) => {
+    api.get("/bookings/admin/dashboard").then((res) => {
+      // console.log(res.data);
       setStats(res.data);
     });
   }, []);
 
   if (!stats) return <p className="p-6">Loading...</p>;
 
-  // circle chart data
+  // ===== PIE DATA =====
   const pieData = [
     { name: "Users", value: stats.totalUsers },
     { name: "Properties", value: stats.totalListing },
@@ -34,122 +35,128 @@ const Dashboard = () => {
     { name: "Pending", value: stats.pendingBookings },
   ];
 
-  // example line graph data
-  const lineData = [
-    { month: "Jan", bookings: 0 },
-    { month: "Feb", bookings: 0 },
-    { month: "Mar", bookings: 2 },
-
-  ];
+  // ===== LINE DATA =====
+  const lineData = stats.monthlyBookings || [];
 
   return (
-    <div className="flex">
-      <div className="p-6 flex-1 bg-gray-100 min-h-screen">
-        <h1 className="text-2xl mb-6 font-bold">Dashboard</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h1 className="text-3xl font-bold mb-8">
+        Dashboard Overview
+      </h1>
 
-        {/* ================= STATS CARDS ================= */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <AnimatedCard title="Users" value={stats.totalUsers} color={COLORS[0]} />
-          <AnimatedCard title="Properties" value={stats.totalListing} color={COLORS[1]} />
-          <AnimatedCard title="Bookings" value={stats.totalBookings} color={COLORS[2]} />
-          <AnimatedCard title="Pending" value={stats.pendingBookings} color={COLORS[3]} />
-        </div>
+      {/* ===== STATS CARDS ===== */}
+      <div className="grid md:grid-cols-4 gap-6 mb-10">
+        <StatCard title="Users" value={stats.totalUsers} color="from-pink-500 to-red-500" />
+        <StatCard title="Properties" value={stats.totalListing} color="from-purple-500 to-indigo-500" />
+        <StatCard title="Bookings" value={stats.totalBookings} color="from-yellow-400 to-orange-500" />
+        <StatCard title="Pending" value={stats.pendingBookings} color="from-cyan-400 to-blue-500" />
+      </div>
 
-        {/* ================= CHARTS ================= */}
-        <div className="grid grid-cols-2 gap-6">
+      {/* ===== CHARTS ===== */}
+      <div className="grid md:grid-cols-2 gap-8">
 
-          {/* PIE CHART */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 rounded-2xl shadow"
-          >
-            <h3 className="font-semibold mb-4">
-              Booking Distribution
-            </h3>
+        {/* ===== DONUT CHART ===== */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-6 rounded-3xl shadow-md"
+        >
+          <h3 className="font-semibold mb-4 text-lg">
+            Booking Distribution
+          </h3>
 
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  innerRadius={60}
-                  outerRadius={90}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={index} fill={COLORS[index]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </motion.div>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                innerRadius={70}
+                outerRadius={100}
+                paddingAngle={5}
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={index} fill={COLORS[index]} />
+                ))}
+              </Pie>
 
-          {/* LINE GRAPH */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 rounded-2xl shadow"
-          >
-            <h3 className="font-semibold mb-4">
-              Monthly Booking Trend
-            </h3>
+              {/* CENTER VALUE */}
+              <text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="text-xl font-bold"
+              >
+                {stats.totalBookings}
+              </text>
 
-            <ResponsiveContainer width="100%" height={250}>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        {/* ===== LINE GRAPH ===== */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-6 rounded-3xl shadow-md"
+        >
+          <h3 className="font-semibold mb-4 text-lg">
+            Monthly Booking Trend
+          </h3>
+
+          {lineData.length === 0 ? (
+            <p className="text-gray-400 text-center mt-10">
+              No booking data available
+            </p>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
               <LineChart data={lineData}>
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
+
                 <Line
                   type="monotone"
                   dataKey="bookings"
+                  stroke="#6366f1"
                   strokeWidth={3}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                  isAnimationActive={true}
                 />
               </LineChart>
             </ResponsiveContainer>
-          </motion.div>
+          )}
+        </motion.div>
 
-        </div>
+      </div>
 
-        {/* ================= REVIEW CARDS ================= */}
-        <div className="grid grid-cols-2 gap-6 mt-8">
-          <StatBox
-            title="Total Reviews"
-            value={stats.totalReviews}
-            color="text-cyan-600"
-          />
-
-          <StatBox
-            title="Pending Reviews"
-            value={stats.pendingReviews}
-            color="text-red-600"
-          />
-        </div>
+      {/* ===== MINI STATS ===== */}
+      <div className="grid md:grid-cols-2 gap-6 mt-10">
+        <MiniStat title="Total Reviews" value={stats.totalReviews} />
+        <MiniStat title="Pending Reviews" value={stats.pendingReviews} />
       </div>
     </div>
   );
 };
 
-
-
-// ================= ANIMATED CARD =================
-const AnimatedCard = ({ title, value, color }) => (
+// ===== STAT CARD =====
+const StatCard = ({ title, value, color }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
-    style={{ backgroundColor: color }}
-    className="p-4  text-white rounded-2xl shadow-lg"
+    className={`p-5 rounded-3xl text-white shadow-lg bg-gradient-to-r ${color}`}
   >
-    <p>{title}</p>
-    <p className="text-3xl font-bold">{value}</p>
+    <p className="text-sm opacity-80">{title}</p>
+    <h2 className="text-3xl font-bold mt-2">{value}</h2>
   </motion.div>
 );
 
-
-// ================= SMALL STAT BOX =================
-const StatBox = ({ title, value, color }) => (
-  <div className="bg-white p-6 rounded-2xl shadow">
-    <h3 className="text-gray-500">{title}</h3>
-    <p className={`text-3xl font-bold ${color}`}>{value}</p>
+// ===== MINI STAT =====
+const MiniStat = ({ title, value }) => (
+  <div className="bg-white p-6 rounded-3xl shadow-md">
+    <p className="text-gray-500">{title}</p>
+    <h2 className="text-3xl font-bold">{value}</h2>
   </div>
 );
 

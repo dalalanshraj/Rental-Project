@@ -41,7 +41,7 @@ export default function CalendarTab({ listingId }) {
 
         setCalendar(data);
 
-        // 🔥 FAST MAP
+        //  FAST MAP
         const map = {};
         data.forEach((c) => {
           map[formatLocalDate(toLocal(c.date))] = c;
@@ -64,14 +64,14 @@ export default function CalendarTab({ listingId }) {
 const handleDayClick = (date) => {
   const clicked = normalizeDate(date);
 
-  // 🔥 first click
+  //  first click
   if (!startDate) {
     setStartDate(clicked);
     setEndDate(null); // ❗ IMPORTANT
     return;
   }
 
-  // 🔥 second click
+  //  second click
   if (!endDate) {
     if (clicked < startDate) {
       setStartDate(clicked);
@@ -82,7 +82,7 @@ const handleDayClick = (date) => {
     return;
   }
 
-  // 🔥 reset selection
+  //  reset selection
   setStartDate(clicked);
   setEndDate(null);
 };
@@ -130,7 +130,7 @@ const handleDayClick = (date) => {
       setEndDate(null);
     } catch {
       alert("Failed to block dates");
-      console.log("TOKEN:", localStorage.getItem("token"));
+      // console.log("TOKEN:", localStorage.getItem("token"));
     } finally {
       setLoading(false);
     }

@@ -5,13 +5,13 @@ export const createDeal = async (req, res) => {
     if (!req.body.listingId) {
   return res.status(400).json({ error: "Listing ID required" });
 }
-    console.log("BODY 👉", req.body); // 👈 ADD THIS
+    // console.log("BODY 👉", req.body); // 👈 ADD THIS
 
     const deal = new Deal(req.body);
 
     await deal.save();
 
-    console.log("SAVED DEAL 👉", deal); // 👈 ADD THIS
+    // console.log("SAVED DEAL 👉", deal); // 👈 ADD THIS
 
     res.json(deal);
 
@@ -97,7 +97,7 @@ export const getActiveDeals = async (req, res) => {
         deal: d,
       }));
 
-    console.log("🔥 FINAL DEAL LIST 👉", listings);
+    console.log(" FINAL DEAL LIST 👉", listings);
 
     res.json(listings);
 

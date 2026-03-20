@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
-import mongoose from "mongoose";
+import User from "../models/User.js";
 import Listing from "../models/Listing.js";
+import mongoose from "mongoose";
 import Deal from "../models/Deal.js";
 import Booking from "../models/Booking.js";
 import Coupon from "../models/Coupon.js";
@@ -59,7 +60,7 @@ const normalizeCalendar = (calendar = []) => {
     .map((item) => {
       const d = toValidDate(item?.date);
       if (!d) return null;
-      d.setHours(12, 0, 0, 0); // 🔥 MUST ADD
+      d.setHours(12, 0, 0, 0); //  MUST ADD
 
       return {
         date: d,
@@ -145,17 +146,17 @@ export const previewBooking = async (req, res) => {
 
       let price = rate?.nightly || 0;
 
-    const activeDeal = deals.find((deal) => {
-  const currentKey = toDateKey(current);
-  const startKey = toDateKey(deal.dealStartDate);
-  const endKey = toDateKey(deal.dealEndDate);
+      const activeDeal = deals.find((deal) => {
+        const currentKey = toDateKey(current);
+        const startKey = toDateKey(deal.dealStartDate);
+        const endKey = toDateKey(deal.dealEndDate);
 
-  return currentKey >= startKey && currentKey <= endKey;
-});
-// console.log("CURRENT DATE 👉", current);
-// console.log("DEAL START 👉", deals[0]?.dealStartDate);
-// console.log("DEAL END 👉", deals[0]?.dealEndDate);
-// console.log("ACTIVE DEAL 👉", activeDeal);
+        return currentKey >= startKey && currentKey <= endKey;
+      });
+      // console.log("CURRENT DATE 👉", current);
+      // console.log("DEAL START 👉", deals[0]?.dealStartDate);
+      // console.log("DEAL END 👉", deals[0]?.dealEndDate);
+      // console.log("ACTIVE DEAL 👉", activeDeal);
       if (activeDeal) {
         price = activeDeal.discountedRate;
       }
@@ -167,21 +168,41 @@ export const previewBooking = async (req, res) => {
     // ============================
     // EXTRA FEES
     // ============================
-    const cleaningFee = 150;
-    const serviceFee = Math.round(subtotal * 0.05);
-    const taxes = Math.round(subtotal * 0.12);
-    const warranty = 79;
+    // ============================
+    // EXTRA FEES ONLY
+    // ============================
+    let extraFeesTotal = 0;
 
-    const total =
-      subtotal + cleaningFee + serviceFee + taxes + warranty;
+    const calculatedFees = (listing.extraFees || []).map((fee) => {
+      let amount = 0;
+
+      if (fee.type === "$") {
+        amount = Number(fee.value);
+      }
+
+      if (fee.type === "%") {
+        amount = Math.round((subtotal * Number(fee.value)) / 100);
+      }
+
+      // ONLY mandatory auto add
+      if (fee.option === "mandatory") {
+        extraFeesTotal += amount;
+      }
+
+      return {
+        name: fee.name,
+        amount,
+        type: fee.type,
+        option: fee.option,
+      };
+    });
+
+    const total = subtotal + extraFeesTotal;
 
     res.json({
       nights,
       subtotal,
-      cleaningFee,
-      serviceFee,
-      taxes,
-      warranty,
+      extraFees: calculatedFees, // ✅ ALL FEES
       total,
     });
 
@@ -245,14 +266,14 @@ export const createBooking = async (req, res) => {
     }
 
     // ==============================
-    // 🔥 GET ALL DEALS
+    // GET ALL DEALS
     // ==============================
     const deals = await Deal.find({
       listingId: propertyId,
     });
-    console.log("🔥 DEALS 👉", deals);
+
     // ==============================
-    // 🔥 PRICE CALCULATION
+    // PRICE CALCULATION
     // ==============================
     let total = 0;
     let nightsCount = 0;
@@ -260,17 +281,17 @@ export const createBooking = async (req, res) => {
     for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
       const current = new Date(d);
 
-      const rate = getRateForDate(listing.rates, current); // ✅ ADD THIS
+      const rate = getRateForDate(listing.rates, current);
 
       let price = rate?.nightly || 0;
 
-    const activeDeal = deals.find((deal) => {
-  const currentKey = toDateKey(current);
-  const startKey = toDateKey(deal.dealStartDate);
-  const endKey = toDateKey(deal.dealEndDate);
+      const activeDeal = deals.find((deal) => {
+        const currentKey = toDateKey(current);
+        const startKey = toDateKey(deal.dealStartDate);
+        const endKey = toDateKey(deal.dealEndDate);
 
-  return currentKey >= startKey && currentKey <= endKey;
-});
+        return currentKey >= startKey && currentKey <= endKey;
+      });
 
       if (activeDeal) {
         price = activeDeal.discountedRate;
@@ -279,6 +300,38 @@ export const createBooking = async (req, res) => {
       total += price;
       nightsCount++;
     }
+
+    // ==============================
+    // EXTRA FEES (FIXED CLEAN)
+    // ==============================
+    const basePrice = total;
+
+    let extraFeesTotal = 0;
+
+    const calculatedFees = (listing.extraFees || []).map((fee) => {
+      let amount = 0;
+
+      if (fee.type === "$") {
+        amount = Number(fee.value);
+      }
+
+      if (fee.type === "%") {
+        amount = Math.round((basePrice * Number(fee.value)) / 100);
+      }
+
+      if (fee.option === "mandatory") {
+        extraFeesTotal += amount;
+      }
+
+      return {
+        name: fee.name,
+        amount,
+        type: fee.type,
+        option: fee.option,
+      };
+    });
+
+    const finalTotal = basePrice + extraFeesTotal;
 
     // ==============================
     // CREATE BOOKING
@@ -291,8 +344,9 @@ export const createBooking = async (req, res) => {
       nights: nightsCount,
       user,
       pricing: {
-        total,
+        total: finalTotal,
         nights: nightsCount,
+        extraFees: calculatedFees,
       },
       payment: {
         provider: "stripe",
@@ -329,12 +383,11 @@ export const createBooking = async (req, res) => {
           source: "booking",
         });
       }
-
     }
-    // ==============================
-    // ADD TURNOVER DAY (CHECKOUT)
-    // ==============================
 
+    // ==============================
+    // TURNOVER DAY
+    // ==============================
     const turnoverDate = new Date(end);
     turnoverDate.setHours(12, 0, 0, 0);
 
@@ -347,7 +400,7 @@ export const createBooking = async (req, res) => {
     if (!turnoverExists) {
       listing.calendar.push({
         date: turnoverDate,
-        status: "H", // 🔥 HALF DAY
+        status: "H",
         source: "booking",
       });
     }
@@ -357,7 +410,7 @@ export const createBooking = async (req, res) => {
     res.json({
       message: "Booking confirmed",
       bookingId: booking._id,
-      totalPrice: total,
+      totalPrice: finalTotal,
     });
 
   } catch (err) {
@@ -480,41 +533,73 @@ export const createPaymentIntent = async (req, res) => {
 
 export const getDashboardStats = async (req, res) => {
   try {
-    const totalUsers = await mongoose.model("User").countDocuments();
-    const totalListing = await Listing.countDocuments();
-    const totalBookings = await Booking.countDocuments();
-    const pendingBookings = await Booking.countDocuments({ status: "pending" });
+    const last6Months = [...Array(6)].map((_, i) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
 
-    const monthlyBookings = await Booking.aggregate([
+      return {
+        month: d.toLocaleString("default", { month: "short" }),
+        monthNumber: d.getMonth() + 1,
+        year: d.getFullYear(),
+      };
+    }).reverse();
+
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const monthlyData = await Booking.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo },
+        },
+      },
       {
         $group: {
-          _id: { $month: "$createdAt" },
+          _id: {
+            month: { $month: "$createdAt" },
+            year: { $year: "$createdAt" },
+          },
           bookings: { $sum: 1 },
         },
       },
-      { $sort: { _id: 1 } },
     ]);
 
-    const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
+    const monthlyBookings = last6Months.map((m) => {
+      const found = monthlyData.find(
+        (d) =>
+          d._id.month === m.monthNumber &&
+          d._id.year === m.year
+      );
 
-    const formatted = monthlyBookings.map((item) => ({
-      month: months[item._id - 1],
-      bookings: item.bookings,
-    }));
+      return {
+        month: m.month,
+        bookings: found ? found.bookings : 0,
+      };
+    });
+
+    // ===== COUNTS =====
+    const totalBookings = await Booking.countDocuments();
+    const totalUsers = await User.countDocuments();
+    const totalListing = await Listing.countDocuments();
+
+    // 👉 SAFE DEFAULTS (no error)
+    const pendingBookings = 0;
+    const totalReviews = 0;
+    const pendingReviews = 0;
 
     res.json({
       totalUsers,
       totalListing,
       totalBookings,
       pendingBookings,
-      monthlyBookings: formatted,
+      totalReviews,
+      pendingReviews,
+      monthlyBookings,
     });
-  } catch (err) {
-    // console.error(err);
-    res.status(500).json({ error: "Dashboard error" });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
