@@ -85,7 +85,7 @@ export default function AddListing() {
           <h1 className="text-3xl font-bold mb-6 text-gray-800 ">
             {listingId ? "Edit Listing" : "Add Listing"}
              <span className="text-yellow-600 mx-5">
-   {listingData?.property?.title || listingData?.property?.name || "Property"}
+   {listingData?.property?.title }
   </span>
           </h1>
 
