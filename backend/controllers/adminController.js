@@ -46,21 +46,22 @@ export const dashboardStats = async (req, res) => {
       status: "pending",
     });
 
-    //  REVIEW STATS
-    let totalReviews = 0;
-    let pendingReviews = 0;
+   let totalReviews = 0;
+let pendingReviews = 0;
 
-    const listings = await Listing.find({}, { reviews: 1 });
+const listings = await Listing.find({}, { reviews: 1 });
 
-    listings.forEach((listing) => {
-      listing.reviews?.forEach((review) => {
-        totalReviews++;
+listings.forEach((listing) => {
+  if (listing.reviews && listing.reviews.length > 0) {
+    totalReviews += listing.reviews.length;
 
-        if (!review.published) {
-          pendingReviews++;
-        }
-      });
+    listing.reviews.forEach((review) => {
+      if (review.published === false) {
+        pendingReviews++;
+      }
     });
+  }
+});
 
     res.json({
       totalUsers,

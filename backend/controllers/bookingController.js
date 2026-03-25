@@ -5,6 +5,7 @@ import Listing from "../models/Listing.js";
 import mongoose from "mongoose";
 import Deal from "../models/Deal.js";
 import Booking from "../models/Booking.js";
+import Inquiry from "../models/Inquiry.js";
 import Coupon from "../models/Coupon.js";
 import Stripe from "stripe";
 
@@ -581,17 +582,34 @@ export const getDashboardStats = async (req, res) => {
     const totalBookings = await Booking.countDocuments();
     const totalUsers = await User.countDocuments();
     const totalListing = await Listing.countDocuments();
+    const totalInquiry = await Inquiry.countDocuments();
 
     // 👉 SAFE DEFAULTS (no error)
     const pendingBookings = 0;
-    const totalReviews = 0;
-    const pendingReviews = 0;
+    let totalReviews = 0;
+   let pendingReviews = 0;
+   
+   const listings = await Listing.find({}, { reviews: 1 });
+   
+   listings.forEach((listing) => {
+     if (listing.reviews && listing.reviews.length > 0) {
+       totalReviews += listing.reviews.length;
+   
+       listing.reviews.forEach((review) => {
+         if (review.published === false) {
+           pendingReviews++;
+         }
+       });
+     }
+   });
+   
 
     res.json({
       totalUsers,
       totalListing,
       totalBookings,
       pendingBookings,
+      totalInquiry,
       totalReviews,
       pendingReviews,
       monthlyBookings,

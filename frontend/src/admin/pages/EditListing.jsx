@@ -51,8 +51,11 @@ export default function EditListing() {
 
       <div className="p-6 w-full">
         <h1 className="text-2xl font-bold mb-4">
-          Edit Listing
-        </h1>
+  Edit Listing -{" "}
+  <span className="text-blue-600">
+    {listing?.property?.title || listing?.property?.name || "Property"}
+  </span>
+</h1>
 
         {/* TABS */}
         <div className="flex gap-6 border-b mb-6 overflow-x-auto">

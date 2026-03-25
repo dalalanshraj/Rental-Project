@@ -257,33 +257,50 @@ const PropertyDetail = () => {
           {/* CALENDAR */}
           <ProCalendar listingId={id} />
 
-          {/* REVIEWS */}
-          {publishedReviews.length > 0 && (
-            <div className="mt-14">
-              <h2 className="text-2xl font-semibold mb-6">
-                Guest Reviews ({publishedReviews.length})
-              </h2>
+        {/* REVIEWS */}
+{publishedReviews.length > 0 && (
+  <div className="mt-14">
+    <h2 className="text-2xl font-semibold mb-6">
+      Guest Reviews ({publishedReviews.length})
+    </h2>
 
-              {publishedReviews.map((review) => (
-                <div key={review._id} className="mb-8">
-                  <div className="border rounded-xl p-6 bg-gray-50">
-                    <div className="text-yellow-500 text-lg mb-2">
-                      {"★".repeat(review.rating)}
-                      {"☆".repeat(5 - review.rating)}
-                    </div>
+    {publishedReviews.map((review) => (
+      <div key={review._id} className="mb-8">
+        <div className="border rounded-xl p-6 bg-gray-50">
+          
+          {/* ⭐ RATING */}
+          <div className="text-yellow-500 text-lg mb-2">
+            {"★".repeat(review.rating)}
+            {"☆".repeat(5 - review.rating)}
+          </div>
 
-                    <h4 className="font-semibold text-lg">
-                      {review.title}
-                    </h4>
+          {/* TITLE */}
+          <h4 className="font-semibold text-lg">
+            {review.title}
+          </h4>
 
-                    <p className="text-gray-700 mt-2">
-                      {review.message}
-                    </p>
-                  </div>
-                </div>
-              ))}
+          {/* MESSAGE */}
+          <p className="text-gray-700 mt-2">
+            {review.message}
+          </p>
+
+          {/* 🔥 ADMIN REPLY (ADD THIS) */}
+          {review.reply && (
+            <div className="mt-4 bg-green-50 border-l-4 border-green-500 p-4 rounded">
+              <p className="text-sm font-semibold text-green-700 mb-1">
+                Owner Reply
+              </p>
+              <p className="text-gray-700 text-sm">
+                {review.reply}
+              </p>
             </div>
           )}
+
+        </div>
+      </div>
+    ))}
+  </div>
+)}
 
           <button
             onClick={() => setOpenReview(true)}

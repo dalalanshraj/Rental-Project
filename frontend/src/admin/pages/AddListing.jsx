@@ -32,6 +32,7 @@ const tabs = [
 ];
 export default function AddListing() {
   const [listingId, setListingId] = useState(null);
+   const [listing, setListing] = useState(null);
   const [activeTab, setActiveTab] = useState("Property");
   const [listingData, setListingData] = useState(null);
 
@@ -60,6 +61,7 @@ export default function AddListing() {
       .get(`/listings/${listingId}`)
       .then(res => {
         setListingData(res.data);
+        
       });
   }, [listingId]);
 
@@ -80,12 +82,15 @@ export default function AddListing() {
         {/* <Sidebar /> */}
         <div className=" max-w-7xl ">
 
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">
+          <h1 className="text-3xl font-bold mb-6 text-gray-800 ">
             {listingId ? "Edit Listing" : "Add Listing"}
+             <span className="text-yellow-600 mx-5">
+   {listingData?.property?.title || listingData?.property?.name || "Property"}
+  </span>
           </h1>
 
           {/* tabs */}
-          <div className="flex gap-6 border-b mb-6 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 border-b mb-6 overflow-x-auto scrollbar-hide">
             {tabs.map(tab => (
               <button
                 key={tab}

@@ -47,14 +47,14 @@ COMMUNITIES: Array.isArray(communities)
       link: `/community/${item._id}`,
     }))
   : [],
-    "WHAT WE OFFER": [{ name: "Properties", link: "/properties" }],
+   
   };
 
   const menuItems = [
     { name: "HOME", link: "/" },
      { name: "ABOUT" },
     { name: "COMMUNITIES" },
-    { name: "WHAT WE OFFER" },
+    { name: "LISTINGS" , link: "/properties" },
     { name: "SPECIALS", link: "/specials" },
     // { name: "ACTIVITIES", link: "/activities" },
     { name: "REVIEWS", link: "/reviews" },
