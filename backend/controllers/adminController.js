@@ -31,7 +31,12 @@ export const adminLogin = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({ token });
+   res.json({
+  token,
+  name: admin.name,
+  email: admin.email,
+});
+
 };
 export const getAllUsers = async (req, res) => {
   const users = await User.find().select("-password");

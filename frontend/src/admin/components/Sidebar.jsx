@@ -59,16 +59,16 @@ const Sidebar = () => {
           <MdBookOnline size={20} />
           Bookings
         </NavLink>
+        <NavLink to="/admin/listings" end className={linkClass}>
+          <MdListAlt size={20} />
+          Listings
+        </NavLink>
 
         {/* <NavLink to="/admin/users" className={linkClass}>
           <MdPeople size={20} />
           Users
         </NavLink> */}
 
-        <NavLink to="/admin/listings" end className={linkClass}>
-          <MdListAlt size={20} />
-          Listings
-        </NavLink>
 
         {/* <NavLink to="/admin/listings/property_add" className={linkClass}>
           <MdAddBox size={20} />

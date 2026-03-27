@@ -61,7 +61,7 @@ const price = dealPrice || originalPrice || "Call for price";
   ) : (
     <span>
       {typeof originalPrice === "number"
-        ? `$${originalPrice} / night`
+        ? `$${originalPrice} / Night`
         : "Call for price"}
     </span>
   )}

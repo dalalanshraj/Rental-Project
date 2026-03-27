@@ -178,7 +178,7 @@ useEffect(() => {
 
                       return (
                         <p className="mt-2 font-semibold text-blue-700">
-                          From ${finalPrice} / night
+                          From ${finalPrice} / Night
                         </p>
                       );
                     })()}
