@@ -3,7 +3,7 @@ import Inquiry from "../models/Inquiry.js";
 // USER → CREATE INQUIRY
 export const createInquiry = async (req, res) => {
   try {
-    const { propertyId, name, email, phone, message } = req.body;
+    const { propertyId, name, email, phone, message, Arrival , Departure , Adults , Kids } = req.body;
 
     if (!propertyId) {
       return res.status(400).json({ error: "Property is required" });
@@ -15,6 +15,12 @@ export const createInquiry = async (req, res) => {
       email,
       phone,
       message,
+      Arrival,
+      Departure, 
+      Adults, 
+      Kids,
+
+
     });
 
     //  populate property title

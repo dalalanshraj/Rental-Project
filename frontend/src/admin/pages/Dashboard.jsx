@@ -1,6 +1,8 @@
   import { useEffect, useState } from "react";
   import api from "../../api/axios";
   import { motion } from "framer-motion";
+  import { useNavigate } from "react-router-dom";
+  
   import {
     PieChart,
     Pie,
@@ -17,6 +19,7 @@
 
   const Dashboard = () => {
     const [stats, setStats] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
     api.get("/bookings/admin/dashboard")
@@ -55,7 +58,12 @@
           {/* <StatCard title="Users" value={stats.totalUsers} color="from-pink-500 to-red-500" /> */}
           <StatCard title="Properties" value={stats.totalListing} color="from-purple-500 to-indigo-500" />
           <StatCard title="Bookings" value={stats.totalBookings} color="from-yellow-400 to-orange-500" />
-          <StatCard title="Inquiry" value={stats.totalInquiry} color="from-cyan-400 to-blue-500" />
+         <StatCard
+  title="Inquiry"
+  value={stats.totalInquiry}
+  color="from-cyan-400 to-blue-500"
+  onClick={() => navigate("/admin/listings")}
+/>
         </div>
 
         {/* ===== CHARTS ===== */}
@@ -140,30 +148,39 @@
 
         {/* ===== MINI STATS ===== */}
         <div className="grid md:grid-cols-2 gap-6 mt-10">
-          <MiniStat title="Total Reviews" value={stats.totalReviews} />
-          <MiniStat title="Pending Reviews" value={stats.pendingReviews} />
+          <MiniStat
+  title="Total Reviews"
+  value={stats.totalReviews}
+  onClick={() => navigate("/admin/listings")}
+/>
+          <MiniStat title="Pending Reviews" value={stats.pendingReviews}
+          onClick={() => navigate("/admin/listings")} />
         </div>
       </div>
     );
   };
 
   // ===== STAT CARD =====
-  const StatCard = ({ title, value, color }) => (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      className={`p-5 rounded-3xl text-white shadow-lg bg-gradient-to-r ${color}`}
-    >
-      <p className="text-xl opacity-80">{title}</p>
-      <h2 className="text-3xl font-bold mt-2">{value}</h2>
-    </motion.div>
-  );
+const StatCard = ({ title, value, color, onClick }) => (
+  <motion.div
+    onClick={onClick}
+    whileHover={{ scale: 1.05 }}
+    className={`p-5 rounded-3xl text-white shadow-lg bg-gradient-to-r ${color} cursor-pointer`}
+  >
+    <p className="text-xl opacity-80">{title}</p>
+    <h2 className="text-3xl font-bold mt-2">{value}</h2>
+  </motion.div>
+);
 
   // ===== MINI STAT =====
-  const MiniStat = ({ title, value }) => (
-    <div className="bg-white p-6 rounded-3xl shadow-md">
-      <p className="text-gray-500">{title}</p>
-      <h2 className="text-3xl font-bold">{value}</h2>
-    </div>
-  );
+  const MiniStat = ({ title, value, onClick }) => (
+  <div
+    onClick={onClick}
+    className="bg-white p-6 rounded-3xl shadow-md cursor-pointer hover:shadow-lg"
+  >
+    <p className="text-gray-500">{title}</p>
+    <h2 className="text-3xl font-bold">{value}</h2>
+  </div>
+);
 
   export default Dashboard;

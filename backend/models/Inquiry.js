@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const inquirySchema = new mongoose.Schema({
   property: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Listing",
+    ref: "Listing", 
     required: true
   },
 
@@ -11,6 +11,23 @@ const inquirySchema = new mongoose.Schema({
   email: String,
   phone: String,
   message: String,
+
+  Arrival:{
+    type:Date,
+    required:true,
+  },
+   Departure:{
+    type:Date,
+    required:true,
+  },
+
+  Adults:String,
+  Kids:String,
+
+   isRead: {            
+    type: Boolean,
+    default: false
+  },
 
   createdAt: {
     type: Date,

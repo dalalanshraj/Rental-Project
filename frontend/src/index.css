@@ -1,5 +1,13 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+body{
+    font-family: 'Poppins', sans-serif;
+}
+
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -89,5 +97,5 @@ select::-webkit-scrollbar-thumb:hover {
   animation: scaleIn 0.3s ease-out forwards;
 }
 .react-datepicker-popper {
-  z-index: 9999 !important;
+  z-index: 99999 !important;
 }

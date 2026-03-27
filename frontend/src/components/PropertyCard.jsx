@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, Links } from "react-router-dom";
 
 const PropertyCard = ({ listing }) => {
   if (!listing) return null;
@@ -19,6 +19,7 @@ const dealPrice = listing?.deal?.discountedRate;
 const price = dealPrice || originalPrice || "Call for price";
 
   return (
+    <Link to={`/${listing?._id}`}>
     <div className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden relative">
 
       {/* DEAL RIBBON */}
@@ -69,13 +70,14 @@ const price = dealPrice || originalPrice || "Call for price";
 
         <Link
           to={`/${listing?._id}`}
-          className="inline-block mt-3 text-blue-600 font-semibold"
+          className="inline-block mt-3 text-white font-semibold border p-2 rounded-2xl bg-blue-400 hover:bg-blue-500 "
         >
           View Details →
         </Link>
       </div>
 
     </div>
+    </Link>
   );
 };
 

@@ -109,6 +109,7 @@ useEffect(() => {
                   : "/placeholder.jpg";
                 // console.log("FINAL IMAGE URL:", imageUrl);
                 return (
+                  // <Link to={`/${listing?._id}`}>
                   <div
                     key={p._id}
                     onClick={() => {
@@ -182,6 +183,7 @@ useEffect(() => {
                       );
                     })()}
                   </div>
+                  // </Link>
                 );
               })}
             </div>

@@ -16,6 +16,7 @@ import Reviews from "../../tabs/Reviews.jsx"
 import CalendarTab from "../../tabs/CalendarTab.jsx";
 import DealsTab from "../../tabs/DealsTab.jsx";
 
+
 const tabs = [
   "Property",
   "Description",
@@ -38,6 +39,7 @@ export default function AddListing() {
 
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+  
 
 
   useEffect(() => {
@@ -51,7 +53,10 @@ export default function AddListing() {
     }
   }, [id, searchParams]);
 
-
+useEffect(() => {
+  const tab = searchParams.get("tab");
+  if (tab) setActiveTab(tab);
+}, [searchParams]);
 
 
   useEffect(() => {
@@ -178,7 +183,8 @@ export default function AddListing() {
               <Inquiry listingId={listingId}
                 setListingId={setListingId}
                 initialData={listingData?.Inquiry}
-                goNextTab={goNextTab} />)}
+                goNextTab={goNextTab} 
+                 setActiveTab={setActiveTab}/>)}
             {activeTab === "Calendar" && (
               <CalendarTab
                 listingId={listingId}

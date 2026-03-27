@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import Listing from "../models/Listing.js";
 import Deal from "../models/Deal.js";
+import Inquiry from "../models/Inquiry.js";
 import fs from "fs";
 import path from "path";
 dotenv.config();
@@ -76,8 +77,30 @@ export const updateProperty = async (req, res) => {
 
 export const getAllListings = async (req, res) => {
   try {
-    const listings = await Listing.find();
-    res.json(listings);
+    const listings = await Listing.find().lean(); // ✅ safe
+
+    const updatedListings = await Promise.all(
+      listings.map(async (listing) => {
+
+        // 🔔 Inquiry count
+        const inquiryCount = await Inquiry.countDocuments({
+          property: listing._id,
+        });
+
+        // ⭐ Review count (from listing.reviews array)
+        const reviewCount = listing.reviews?.length || 0;
+
+        return {
+          ...listing,
+          inquiryCount,
+          reviewCount,
+        };
+      })
+    );
+
+    res.json(updatedListings);
+
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -6,13 +6,9 @@ export default {
   ],
   theme: {
     extend: {
-       fontFamily: {
-        // You can name this anything you want (e.g., 'primary', 'raleway', 'sans-new')
-        'raleway': ['Raleway', 'sans-serif'],
-        'playfair': ['Playfair Display', 'serif'], // Example for another font
-        'lato': ['Lato', 'sans-serif'],
-        'yellowtail': ['"Yellowtail"', '"Yellowtail Fallback"', 'cursive'],
-      },  
+      fontFamily: {
+        poppins: ['Poppins', 'sans-serif'],
+      },
       
       
     },

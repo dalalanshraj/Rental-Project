@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios.js";
 import ListingCard from "../components/ListingDetails";
+import { useSearchParams } from "react-router-dom";
 // import ListingCard from "./ListingCard";
 
 export default function Listings() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
 
   // ==========================
   // FETCH ALL LISTINGS
@@ -93,7 +95,7 @@ export default function Listings() {
         <p className="text-gray-500">No listings found</p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="flex flex-col gap-6">
         {listings.map((listing) => (
   <ListingCard
     key={listing._id}
